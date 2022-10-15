@@ -1,7 +1,7 @@
 // 16-bit address register with asynchronous reset, synchronous load and
 // synchronous increment.
 //
-// Uses: 6 ICs == 4x74161, 2x74244
+// Uses: 6 ICs == 4x74161, 2x74541
 
 module addrreg
 (
@@ -25,22 +25,18 @@ wire [3:0] rco;
 
 assign display_value = value;
 
-ttl_74244 line_driver0(
-  .A1(value[3:0]),
-  .OE1_bar(ASSERT_bar),
-  .A2(value[7:4]),
-  .OE2_bar(ASSERT_bar),
-  .Y1(BUS_out[3:0]),
-  .Y2(BUS_out[7:4])
+ttl_74541 line_driver0(
+  .A(value[7:0]),
+  .Enable1_bar(ASSERT_bar),
+  .Enable2_bar(1'b0),
+  .Y(BUS_out[7:0])
 );
 
-ttl_74244 line_driver1(
-  .A1(value[11:8]),
-  .OE1_bar(ASSERT_bar),
-  .A2(value[15:12]),
-  .OE2_bar(ASSERT_bar),
-  .Y1(BUS_out[11:8]),
-  .Y2(BUS_out[15:12])
+ttl_74541 line_driver1(
+  .A(value[15:8]),
+  .Enable1_bar(ASSERT_bar),
+  .Enable2_bar(1'b0),
+  .Y(BUS_out[15:8])
 );
 
 ttl_74161 reg0(

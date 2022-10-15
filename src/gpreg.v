@@ -1,7 +1,7 @@
 // 8-bit general purpose register with synchronous load and asynchronous assert.
 //
 //
-// Uses 4 ICs == 1x74377, 3x74244
+// Uses 4 ICs == 1x74377, 3x74541
 
 module gpreg(
   // Control lines
@@ -34,31 +34,25 @@ ttl_74377 register(
   .Q          (value)
 );
 
-ttl_74244 bus_out(
-  .A1       (value[3:0]),
-  .A2       (value[7:4]),
-  .Y1       (MAIN_out[3:0]),
-  .Y2       (MAIN_out[7:4]),
-  .OE1_bar  (ASSERT_MAIN_bar),
-  .OE2_bar  (ASSERT_MAIN_bar)
+ttl_74541 main_us_out(
+  .A            (value),
+  .Enable1_bar  (ASSERT_MAIN_bar),
+  .Enable2_bar  (1'b0),
+  .Y            (MAIN_out)
 );
 
-ttl_74244 lhs_bus_out(
-  .A1       (value[3:0]),
-  .A2       (value[7:4]),
-  .Y1       (LHS_out[3:0]),
-  .Y2       (LHS_out[7:4]),
-  .OE1_bar  (ASSERT_LHS_bar),
-  .OE2_bar  (ASSERT_LHS_bar)
+ttl_74541 lhs_us_out(
+  .A            (value),
+  .Enable1_bar  (ASSERT_LHS_bar),
+  .Enable2_bar  (1'b0),
+  .Y            (LHS_out)
 );
 
-ttl_74244 rhs_bus_out(
-  .A1       (value[3:0]),
-  .A2       (value[7:4]),
-  .Y1       (RHS_out[3:0]),
-  .Y2       (RHS_out[7:4]),
-  .OE1_bar  (ASSERT_RHS_bar),
-  .OE2_bar  (ASSERT_RHS_bar)
+ttl_74541 rhs_us_out(
+  .A            (value),
+  .Enable1_bar  (ASSERT_RHS_bar),
+  .Enable2_bar  (1'b0),
+  .Y            (RHS_out)
 );
 
 endmodule
