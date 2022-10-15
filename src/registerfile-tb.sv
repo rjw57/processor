@@ -3,7 +3,6 @@
 
 module test;
 
-`TBASSERT_METHOD(tbassert)
 `TBCLK_WAIT_TICK_METHOD(wait_tick)
 
 reg CLK;

@@ -3,7 +3,6 @@
 
 module test;
 
-`TBASSERT_METHOD(tbassert)
 `TBCLK_WAIT_TICK_METHOD(wait_tick)
 
 reg CLK, LOAD_bar, ASSERT_bar, ASSERT_LHS_bar, ASSERT_RHS_bar;
@@ -45,9 +44,9 @@ begin
 
   // High-Z outputs
 #10
-  tbassert(BUS_out === 8'bZ, "no bus assert");
-  tbassert(LHS_out === 8'bZ, "no lhs bus assert");
-  tbassert(RHS_out === 8'bZ, "no rhs bus assert");
+  `tbassert(BUS_out === 8'bZ, "no bus assert");
+  `tbassert(LHS_out === 8'bZ, "no lhs bus assert");
+  `tbassert(RHS_out === 8'bZ, "no rhs bus assert");
 
   // Load value
 #20
@@ -58,17 +57,17 @@ begin
   LOAD_bar = 1;
 #30
   // Still have high-Z outputs but display updated
-  tbassert(BUS_out === 8'bZ, "post load no bus assert");
-  tbassert(LHS_out === 8'bZ, "post load no lhs bus assert");
-  tbassert(RHS_out === 8'bZ, "post load no rhs bus assert");
-  tbassert(display_value === 8'hA8, "display");
+  `tbassert(BUS_out === 8'bZ, "post load no bus assert");
+  `tbassert(LHS_out === 8'bZ, "post load no lhs bus assert");
+  `tbassert(RHS_out === 8'bZ, "post load no rhs bus assert");
+  `tbassert(display_value === 8'hA8, "display");
 
   // Clock ignored if LOAD not asserted
   BUS_in = 8'h8A;
   LOAD_bar = 1;
   wait_tick();
 #10
-  tbassert(display_value === 8'hA8, "no load");
+  `tbassert(display_value === 8'hA8, "no load");
 
   // Assert lines
 #20
@@ -76,25 +75,25 @@ begin
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 1;
 #30
-  tbassert(BUS_out === 8'hA8, "bus assert");
-  tbassert(LHS_out === 8'bZ, "no lhs bus assert");
-  tbassert(RHS_out === 8'bZ, "no rhs bus assert");
+  `tbassert(BUS_out === 8'hA8, "bus assert");
+  `tbassert(LHS_out === 8'bZ, "no lhs bus assert");
+  `tbassert(RHS_out === 8'bZ, "no rhs bus assert");
 #40
   ASSERT_bar = 1;
   ASSERT_LHS_bar = 0;
   ASSERT_RHS_bar = 1;
 #50
-  tbassert(BUS_out === 8'bZ, "no bus assert");
-  tbassert(LHS_out === 8'hA8, "lhs bus assert");
-  tbassert(RHS_out === 8'bZ, "no rhs bus assert");
+  `tbassert(BUS_out === 8'bZ, "no bus assert");
+  `tbassert(LHS_out === 8'hA8, "lhs bus assert");
+  `tbassert(RHS_out === 8'bZ, "no rhs bus assert");
 #60
   ASSERT_bar = 1;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 0;
 #70
-  tbassert(BUS_out === 8'bZ, "no bus assert");
-  tbassert(LHS_out === 8'bZ, "no lhs bus assert");
-  tbassert(RHS_out === 8'hA8, "rhs bus assert");
+  `tbassert(BUS_out === 8'bZ, "no bus assert");
+  `tbassert(LHS_out === 8'bZ, "no lhs bus assert");
+  `tbassert(RHS_out === 8'hA8, "rhs bus assert");
 
   // Finish on next clock pulse
   wait_tick();

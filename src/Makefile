@@ -5,11 +5,11 @@ IVERILOG_FLAGS:=\
 	-Wanachronisms -Wimplicit -Wtimescale -Wportbind
 VVP:=vvp
 
-TEST_V_FILES:=$(wildcard *-tb.v)
-TEST_VVP_FILES:=$(TEST_V_FILES:.v=.vvp)
-TEST_VCD_FILES:=$(TEST_V_FILES:.v=.vcd)
+TEST_V_FILES:=$(wildcard *-tb.sv)
+TEST_VVP_FILES:=$(TEST_V_FILES:.sv=.vvp)
+TEST_VCD_FILES:=$(TEST_V_FILES:.sv=.vcd)
 
-%-tb.vvp: %-tb.v
+%-tb.vvp: %-tb.sv
 	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$@" "$<"
 
 %-tb.vcd: %-tb.vvp
