@@ -38,61 +38,61 @@ begin
   BUS_in = 16'b0;
 
   // Asynchronous reset
-#5
+#10
   RST_bar = 0;
-#15
+#10
   RST_bar = 1;
-#25
+#10
   `TBASSERT(BUS_out === 16'h0000, "Test reset");
 
   // Count
   wait_tick();
-#5
+#10
   INC = 1;
   wait_tick();
-#5
+#10
   `TBASSERT(BUS_out === 16'h0001, "Increment once");
-#15
+#10
   wait_tick();
-#5
+#10
   `TBASSERT(BUS_out === 16'h0002, "Increment twice");
   INC = 0;
 
   // Synchronous load
   wait_tick();
-#5
+#10
   RST_bar = 0;
   BUS_in = 16'h8FFF;
-#15
+#10
   RST_bar = 1;
-#25
+#10
   LOAD_bar = 0;
-#35
+#10
   `TBASSERT(BUS_out === 16'h0000, "reset");
   wait_tick();
-#5
+#10
   `TBASSERT(BUS_out === 16'h8FFF, "synchronous load");
-#15
+#10
   LOAD_bar = 1;
 
   // Increment with ripple carry
-#25
+#10
   INC = 1;
-#35
+#10
   `TBASSERT(BUS_out === 16'h8FFF, "synchronous load");
   wait_tick();
-#5
+#10
   `TBASSERT(BUS_out === 16'h9000, "increment with ripple carry");
 
   // Assert
   wait_tick();
-#5
+#10
   ASSERT_bar = 1;
-#15
+#10
   `TBASSERT(BUS_out === 16'bZ, "do not assert");
-#25
+#10
   ASSERT_bar = 0;
-#35
+#10
   `TBASSERT(BUS_out !== 16'bZ, "assert");
 
   // Finish on next clock pulse

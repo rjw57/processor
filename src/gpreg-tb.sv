@@ -50,13 +50,13 @@ begin
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
 
   // Load value
-#20
+#10
   LOAD_bar = 0;
   DATA_in = 8'hA8;
   wait_tick();
-#25
+#10
   LOAD_bar = 1;
-#30
+#10
   // Still have high-Z outputs but display updated
   `TBASSERT(MAIN_out === 8'bZ, "post load no bus assert")
   `TBASSERT(LHS_out === 8'bZ, "post load no lhs bus assert")
@@ -71,27 +71,27 @@ begin
   `TBASSERT(display_value === 8'hA8, "no load")
 
   // Assert lines
-#20
+#10
   ASSERT_MAIN_bar = 0;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 1;
-#30
+#10
   `TBASSERT(MAIN_out === 8'hA8, "bus assert")
   `TBASSERT(LHS_out === 8'bZ, "no lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
-#40
+#10
   ASSERT_MAIN_bar = 1;
   ASSERT_LHS_bar = 0;
   ASSERT_RHS_bar = 1;
-#50
+#10
   `TBASSERT(MAIN_out === 8'bZ, "no bus assert")
   `TBASSERT(LHS_out === 8'hA8, "lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
-#60
+#10
   ASSERT_MAIN_bar = 1;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 0;
-#70
+#10
   `TBASSERT(MAIN_out === 8'bZ, "no bus assert")
   `TBASSERT(LHS_out === 8'bZ, "no lhs bus assert")
   `TBASSERT(RHS_out === 8'hA8, "rhs bus assert")
