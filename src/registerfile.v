@@ -1,4 +1,4 @@
-// All registers contained in the processor
+// All registers contained in the processor.
 
 // TODO: have a better think about the control lines. Perhaps have unified
 // register file and register select, load, increment and main/addr/lhs/rhs

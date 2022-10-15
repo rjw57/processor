@@ -3,6 +3,7 @@
 
 module test;
 
+`TBSETUP
 `TBCLK_WAIT_TICK_METHOD(wait_tick)
 
 reg CLK;
@@ -72,7 +73,7 @@ begin
 
   // Wait for the next clock and finish
   wait_tick();
-  $finish;
+  `TBDONE
 end
 
 endmodule
