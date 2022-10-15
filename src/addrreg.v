@@ -2,8 +2,6 @@
 // synchronous increment.
 //
 // Uses: 6 ICs == 4x74161, 2x74244
-`include "74161.v"
-`include "74244.v"
 
 module addrreg
 (

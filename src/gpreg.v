@@ -2,8 +2,6 @@
 //
 //
 // Uses 4 ICs == 1x74377, 3x74244
-`include "74377.v"
-`include "74244.v"
 
 module gpreg(
   input CLK,
