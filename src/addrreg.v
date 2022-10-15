@@ -5,11 +5,14 @@
 
 module addrreg
 (
-  input CLK,
-  input RST_bar,
-  input LOAD_bar,
-  input INC,
-  input ASSERT_bar,
+  // Control lines
+  input CLK,              // Clock
+  input RST_bar,          // Asynchronous reset
+  input LOAD_bar,         // Load on next +ve clock
+  input INC,              // Increment on next +ve clock
+  input ASSERT_bar,       // Assert to output
+
+  // Bus connection
   input [15:0] BUS_in,
   output [15:0] BUS_out,
 

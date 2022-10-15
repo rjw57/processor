@@ -6,9 +6,9 @@ module test;
 `TBSETUP
 `TBCLK_WAIT_TICK_METHOD(wait_tick)
 
-reg CLK, LOAD_bar, ASSERT_bar, ASSERT_LHS_bar, ASSERT_RHS_bar;
-reg [7:0] BUS_in;
-wire [7:0] BUS_out;
+reg CLK, LOAD_bar, ASSERT_MAIN_bar, ASSERT_LHS_bar, ASSERT_RHS_bar;
+reg [7:0] DATA_in;
+wire [7:0] MAIN_out;
 wire [7:0] LHS_out;
 wire [7:0] RHS_out;
 
@@ -18,11 +18,11 @@ wire [7:0] display_value;
 gpreg dut(
   .CLK(CLK),
   .LOAD_bar(LOAD_bar),
-  .ASSERT_bar(ASSERT_bar),
+  .ASSERT_MAIN_bar(ASSERT_MAIN_bar),
   .ASSERT_LHS_bar(ASSERT_LHS_bar),
   .ASSERT_RHS_bar(ASSERT_RHS_bar),
-  .BUS_in(BUS_in),
-  .BUS_out(BUS_out),
+  .DATA_in(DATA_in),
+  .MAIN_out(MAIN_out),
   .LHS_out(LHS_out),
   .RHS_out(RHS_out),
   .display_value(display_value)
@@ -39,32 +39,32 @@ begin
 
   // Initial signal values
   LOAD_bar = 1;
-  ASSERT_bar = 1;
+  ASSERT_MAIN_bar = 1;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 1;
 
   // High-Z outputs
 #10
-  `TBASSERT(BUS_out === 8'bZ, "no bus assert")
+  `TBASSERT(MAIN_out === 8'bZ, "no bus assert")
   `TBASSERT(LHS_out === 8'bZ, "no lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
 
   // Load value
 #20
   LOAD_bar = 0;
-  BUS_in = 8'hA8;
+  DATA_in = 8'hA8;
   wait_tick();
 #25
   LOAD_bar = 1;
 #30
   // Still have high-Z outputs but display updated
-  `TBASSERT(BUS_out === 8'bZ, "post load no bus assert")
+  `TBASSERT(MAIN_out === 8'bZ, "post load no bus assert")
   `TBASSERT(LHS_out === 8'bZ, "post load no lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "post load no rhs bus assert")
   `TBASSERT(display_value === 8'hA8, "display")
 
   // Clock ignored if LOAD not asserted
-  BUS_in = 8'h8A;
+  DATA_in = 8'h8A;
   LOAD_bar = 1;
   wait_tick();
 #10
@@ -72,27 +72,27 @@ begin
 
   // Assert lines
 #20
-  ASSERT_bar = 0;
+  ASSERT_MAIN_bar = 0;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 1;
 #30
-  `TBASSERT(BUS_out === 8'hA8, "bus assert")
+  `TBASSERT(MAIN_out === 8'hA8, "bus assert")
   `TBASSERT(LHS_out === 8'bZ, "no lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
 #40
-  ASSERT_bar = 1;
+  ASSERT_MAIN_bar = 1;
   ASSERT_LHS_bar = 0;
   ASSERT_RHS_bar = 1;
 #50
-  `TBASSERT(BUS_out === 8'bZ, "no bus assert")
+  `TBASSERT(MAIN_out === 8'bZ, "no bus assert")
   `TBASSERT(LHS_out === 8'hA8, "lhs bus assert")
   `TBASSERT(RHS_out === 8'bZ, "no rhs bus assert")
 #60
-  ASSERT_bar = 1;
+  ASSERT_MAIN_bar = 1;
   ASSERT_LHS_bar = 1;
   ASSERT_RHS_bar = 0;
 #70
-  `TBASSERT(BUS_out === 8'bZ, "no bus assert")
+  `TBASSERT(MAIN_out === 8'bZ, "no bus assert")
   `TBASSERT(LHS_out === 8'bZ, "no lhs bus assert")
   `TBASSERT(RHS_out === 8'hA8, "rhs bus assert")
 

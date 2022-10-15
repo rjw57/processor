@@ -9,7 +9,7 @@ module registerfile (
   // Address register reset
   input RST_bar,
 
-  // Master assert, increment and load enables
+  // Master assert, increment and load enable
   input ADDR_ASSERT_bar,
   input ADDR_LOAD_bar,
   input ADDR_INC,
@@ -120,11 +120,11 @@ generate
     gpreg gpreg(
       .CLK              (CLK),
       .LOAD_bar         (main_load_vec_bar[i]),
-      .ASSERT_bar       (main_assert_vec_bar[i]),
+      .ASSERT_MAIN_bar  (main_assert_vec_bar[i]),
       .ASSERT_LHS_bar   (lhs_assert_vec_bar[i]),
       .ASSERT_RHS_bar   (rhs_assert_vec_bar[i]),
-      .BUS_in           (MAIN_in),
-      .BUS_out          (MAIN_out),
+      .DATA_in          (MAIN_in),
+      .MAIN_out         (MAIN_out),
       .LHS_out          (LHS_out),
       .RHS_out          (RHS_out)
     );

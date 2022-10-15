@@ -4,13 +4,18 @@
 // Uses 4 ICs == 1x74377, 3x74244
 
 module gpreg(
-  input CLK,
-  input LOAD_bar,
-  input ASSERT_bar,
-  input ASSERT_LHS_bar,
-  input ASSERT_RHS_bar,
-  input [7:0] BUS_in,
-  output [7:0] BUS_out,
+  // Control lines
+  input CLK,              // Clock
+  input LOAD_bar,         // Load on next +ve clock
+  input ASSERT_MAIN_bar,  // Async assert to main bus
+  input ASSERT_LHS_bar,   // Async assert to LHS bus
+  input ASSERT_RHS_bar,   // Async assert to RHS bus
+
+  // Input dats
+  input [7:0] DATA_in,
+
+  // Outputs
+  output [7:0] MAIN_out,
   output [7:0] LHS_out,
   output [7:0] RHS_out,
 
@@ -24,7 +29,7 @@ assign display_value = value;
 
 ttl_74377 register(
   .Enable_bar (LOAD_bar),
-  .D          (BUS_in),
+  .D          (DATA_in),
   .Clk        (CLK),
   .Q          (value)
 );
@@ -32,10 +37,10 @@ ttl_74377 register(
 ttl_74244 bus_out(
   .A1       (value[3:0]),
   .A2       (value[7:4]),
-  .Y1       (BUS_out[3:0]),
-  .Y2       (BUS_out[7:4]),
-  .OE1_bar  (ASSERT_bar),
-  .OE2_bar  (ASSERT_bar)
+  .Y1       (MAIN_out[3:0]),
+  .Y2       (MAIN_out[7:4]),
+  .OE1_bar  (ASSERT_MAIN_bar),
+  .OE2_bar  (ASSERT_MAIN_bar)
 );
 
 ttl_74244 lhs_bus_out(

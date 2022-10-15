@@ -1,4 +1,4 @@
-// Test: general purpose register
+// Test: register file
 `include "tbhelper.v"
 
 module test;
