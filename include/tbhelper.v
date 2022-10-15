@@ -3,7 +3,11 @@
 `default_nettype none
 
 `define TBSETUP reg tb_all_asserts_ok = 1'b1;
+`ifdef TB_SET_EXIT_CODE
 `define TBDONE $finish_and_return(!tb_all_asserts_ok);
+`else
+`define TBDONE $finish;
+`endif
 `define TBASSERT(cond, msg) assert (cond) \
   begin \
     $display("ok: ", msg); \

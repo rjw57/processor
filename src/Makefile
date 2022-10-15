@@ -1,7 +1,7 @@
 IVERILOG:=iverilog
 IVERILOG_FLAGS:=\
 	-g2012 -y . -y ../lib/custom-7400/ -I../include/ \
-	-civerilog.cmd -l ttl_74xx.v \
+	-civerilog.cmd -l ttl_74xx.v -DTB_SET_EXIT_CODE \
 	-Wanachronisms -Wimplicit -Wtimescale -Wportbind
 VVP:=vvp
 
