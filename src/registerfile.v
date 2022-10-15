@@ -1,4 +1,6 @@
 // All registers contained in the processor.
+//
+// Uses 7 ICs == 7x74138
 
 // TODO: have a better think about the control lines. Perhaps have unified
 // register file and register select, load, increment and main/addr/lhs/rhs
