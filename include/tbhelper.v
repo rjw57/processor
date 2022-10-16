@@ -43,7 +43,7 @@ module testbench #( \
 `define TBTICK wait_tick();
 
 `define TBEND \
-    `TBTICK \
+    `TBDELAY(2) \
     `TBDONE \
   end \
   endmodule

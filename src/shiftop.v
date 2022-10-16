@@ -10,7 +10,7 @@
 //  | 2'b01  | VALUE_OUT = VALUE_IN, carry_out = 1'b0                 |
 //  | 2'b10  | VALUE_OUT = VALUE_IN << 1, carry_out = VALUE_IN >> 7   |
 //  | 2'b11  | VALUE_OUT = VALUE_IN >> 1, carry_out = VALUE_IN & 0x1  |
-module shift #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
+module shiftop #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [1:0] OP_SEL,     // operation select
   input [7:0] VALUE_IN,   // input value
@@ -41,7 +41,6 @@ assign carries[3] = VALUE_IN[0];
 
 genvar i;
 generate
-  // 4 units
   for (i=0; i<4; i=i+1)
   begin
     ttl_74153 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) sel(
