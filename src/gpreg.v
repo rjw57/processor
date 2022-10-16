@@ -3,7 +3,8 @@
 //
 // Uses 4 ICs == 1x74377, 3x74541
 
-module gpreg(
+module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
+(
   // Control lines
   input CLK,              // Clock
   input LOAD_bar,         // Load on next +ve clock
@@ -27,28 +28,28 @@ wire [7:0] value;
 
 assign display_value = value;
 
-ttl_74377 register(
+ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
   .Enable_bar (LOAD_bar),
   .D          (DATA_in),
   .Clk        (CLK),
   .Q          (value)
 );
 
-ttl_74541 main_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_us_out(
   .A            (value),
   .Enable1_bar  (ASSERT_MAIN_bar),
   .Enable2_bar  (1'b0),
   .Y            (MAIN_out)
 );
 
-ttl_74541 lhs_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_us_out(
   .A            (value),
   .Enable1_bar  (ASSERT_LHS_bar),
   .Enable2_bar  (1'b0),
   .Y            (LHS_out)
 );
 
-ttl_74541 rhs_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_us_out(
   .A            (value),
   .Enable1_bar  (ASSERT_RHS_bar),
   .Enable2_bar  (1'b0),

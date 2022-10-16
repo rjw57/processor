@@ -19,3 +19,31 @@
   end
 
 `define TBCLK_WAIT_TICK_METHOD(TB_NAME) task TB_NAME; repeat (1) @(posedge CLK); endtask
+
+`define TBPROLOGUE \
+module testbench #( \
+  parameter DELAY_RISE = 10, DELAY_FALL = 10, DUMP_FILENAME = "testbench.vcd" \
+); \
+  reg CLK; \
+  `TBSETUP \
+  `TBCLK_WAIT_TICK_METHOD(wait_tick) \
+  initial CLK = 1'b0; \
+  always #($max(1, 20 * DELAY_RISE)) CLK = ~CLK;
+
+`define TBBEGIN \
+  initial \
+  begin \
+    $dumpfile(DUMP_FILENAME); \
+    $dumpvars;
+
+// Delay for N gate delays
+`define TBDELAY(N) #($max(1, $max(DELAY_RISE, DELAY_FALL)) * N)
+
+// Delay until next clock tick
+`define TBTICK wait_tick();
+
+`define TBEND \
+    `TBTICK \
+    `TBDONE \
+  end \
+  endmodule

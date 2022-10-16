@@ -5,7 +5,8 @@
 // TODO: have a better think about the control lines. Perhaps have unified
 // register file and register select, load, increment and main/addr/lhs/rhs
 // assert lines? == 10 lines
-module registerfile (
+module registerfile #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
+(
   input CLK,
 
   // Address register reset
@@ -58,7 +59,7 @@ wire [7:0] lhs_assert_vec_bar;
 wire [7:0] rhs_assert_vec_bar;
 wire [7:0] addr_inc_vec;
 
-ttl_74138 main_assert(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_assert(
   .Enable1_bar  (MAIN_ASSERT_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -66,7 +67,7 @@ ttl_74138 main_assert(
   .Y            (main_assert_vec_bar)
 );
 
-ttl_74138 lhs_assert(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_assert(
   .Enable1_bar  (LHS_ASSERT_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -74,7 +75,7 @@ ttl_74138 lhs_assert(
   .Y            (lhs_assert_vec_bar)
 );
 
-ttl_74138 rhs_assert(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert(
   .Enable1_bar  (RHS_ASSERT_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -82,7 +83,7 @@ ttl_74138 rhs_assert(
   .Y            (rhs_assert_vec_bar)
 );
 
-ttl_74138 addr_assert(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_assert(
   .Enable1_bar  (ADDR_ASSERT_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -90,7 +91,7 @@ ttl_74138 addr_assert(
   .Y            (addr_assert_vec_bar)
 );
 
-ttl_74138 main_load(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_load(
   .Enable1_bar  (MAIN_LOAD_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -98,7 +99,7 @@ ttl_74138 main_load(
   .Y            (main_load_vec_bar)
 );
 
-ttl_74138 addr_load(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_load(
   .Enable1_bar  (ADDR_LOAD_bar),
   .Enable2_bar  (1'b0),
   .Enable3      (1'b1),
@@ -106,7 +107,7 @@ ttl_74138 addr_load(
   .Y            (addr_load_vec_bar)
 );
 
-ttl_74138 addr_inc(
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_inc(
   .Enable1_bar  (1'b0),
   .Enable2_bar  (1'b0),
   .Enable3      (ADDR_INC),

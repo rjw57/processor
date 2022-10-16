@@ -1,12 +1,8 @@
 // Test: register file
 `include "tbhelper.v"
 
-module test;
+`TBPROLOGUE
 
-`TBSETUP
-`TBCLK_WAIT_TICK_METHOD(wait_tick)
-
-reg CLK;
 reg RST_bar;
 reg ADDR_ASSERT_bar, ADDR_LOAD_bar, ADDR_INC;
 reg MAIN_ASSERT_bar, MAIN_LOAD_bar;
@@ -62,18 +58,5 @@ registerfile dut(
   .RHS_out(RHS_out)
 );
 
-// Set up a clock
-initial CLK = 1'b0;
-always #50 CLK = ~CLK;
-
-initial
-begin
-  $dumpfile("gpreg-tb.vcd");
-  $dumpvars;
-
-  // Wait for the next clock and finish
-  wait_tick();
-  `TBDONE
-end
-
-endmodule
+`TBBEGIN
+`TBEND

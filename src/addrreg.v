@@ -3,7 +3,7 @@
 //
 // Uses: 6 ICs == 4x74161, 2x74541
 
-module addrreg
+module addrreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   // Control lines
   input CLK,              // Clock
@@ -25,21 +25,21 @@ wire [3:0] rco;
 
 assign display_value = value;
 
-ttl_74541 line_driver0(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) line_driver0 (
   .A(value[7:0]),
   .Enable1_bar(ASSERT_bar),
   .Enable2_bar(1'b0),
   .Y(BUS_out[7:0])
 );
 
-ttl_74541 line_driver1(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) line_driver1(
   .A(value[15:8]),
   .Enable1_bar(ASSERT_bar),
   .Enable2_bar(1'b0),
   .Y(BUS_out[15:8])
 );
 
-ttl_74161 reg0(
+ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg0(
   .Clear_bar    (RST_bar),
   .Load_bar     (LOAD_bar),
   .ENT          (1'b1),
@@ -50,7 +50,7 @@ ttl_74161 reg0(
   .Q            (value[3:0])
 );
 
-ttl_74161 reg1(
+ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg1(
   .Clear_bar    (RST_bar),
   .Load_bar     (LOAD_bar),
   .ENT          (rco[0]),
@@ -61,7 +61,7 @@ ttl_74161 reg1(
   .Q            (value[7:4])
 );
 
-ttl_74161 reg2(
+ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg2(
   .Clear_bar    (RST_bar),
   .Load_bar     (LOAD_bar),
   .ENT          (rco[1]),
@@ -72,7 +72,7 @@ ttl_74161 reg2(
   .Q            (value[11:8])
 );
 
-ttl_74161 reg3(
+ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg3(
   .Clear_bar    (RST_bar),
   .Load_bar     (LOAD_bar),
   .ENT          (rco[2]),

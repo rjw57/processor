@@ -10,7 +10,7 @@ TEST_VVP_FILES:=$(TEST_V_FILES:.sv=.vvp)
 TEST_VCD_FILES:=$(TEST_V_FILES:.sv=.vcd)
 
 %-tb.vvp: %-tb.sv
-	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$@" "$<"
+	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$@" -s testbench '-Ptestbench.DUMP_FILENAME="$*-tb.vcd"' "$<"
 
 %-tb.vcd: %-tb.vvp
 	"$(VVP)" "$<"
