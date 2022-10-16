@@ -8,18 +8,19 @@ VVP:=vvp
 TEST_V_FILES:=$(wildcard *-tb.sv)
 TEST_VVP_FILES:=$(TEST_V_FILES:.sv=.vvp)
 TEST_VCD_FILES:=$(TEST_V_FILES:.sv=.vcd)
+TEST_TARGETS:=$(addprefix test-,$(TEST_V_FILES:-tb.sv=))
 
-%-tb.vvp: %-tb.sv
-	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$@" -s testbench '-Ptestbench.DUMP_FILENAME="$*-tb.vcd"' "$<"
-
-%-tb.vcd: %-tb.vvp
-	"$(VVP)" "$<"
-
-%-tb.v: %.v
-
-test: $(TEST_VCD_FILES)
-.PHONY: test
 .DEFAULT: test
+
+test: $(TEST_TARGETS)
+.PHONY: test
+
+$(TEST_TARGETS): test-%:
+	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$*-tb.vvp" \
+		-s testbench '-Ptestbench.DUMP_FILENAME="$*-tb.vcd"' "$*-tb.sv"
+	"$(VVP)" "$*-tb.vvp"
+	rm "$*-tb.vvp"
+.PHONY: $(TEST_TARGETS)
 
 clean:
 	rm -f $(TEST_VVP_FILES)
