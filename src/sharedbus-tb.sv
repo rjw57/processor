@@ -62,7 +62,7 @@ integer i, j;
     `TBDELAY(2)
     device_buses[i] = 8'hZZ;
     `TBDELAY(2)
-    `TBASSERT(bus_out === 8'hZZ, "bus propogates high-Z");
+    `TBASSERT(bus_out === 8'hZZ, "bus propagates high-Z");
     `TBASSERT(contention_detected === 1'b0, "no contention");
   end
 
