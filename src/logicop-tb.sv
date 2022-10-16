@@ -1,4 +1,3 @@
-// Test: general purpose register
 `include "tbhelper.v"
 
 `TBPROLOGUE

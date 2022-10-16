@@ -8,9 +8,16 @@
 `else
 `define TBDONE $finish;
 `endif
+
+`ifdef TBVERBOSE
+  `define TB_IS_VERBOSE 1
+`else
+  `define TB_IS_VERBOSE 0
+`endif
+
 `define TBASSERT(cond, msg) assert (cond) \
   begin \
-    $display("ok: ", msg); \
+    if(`TB_IS_VERBOSE) $display("ok: ", msg); \
   end \
   else \
   begin \

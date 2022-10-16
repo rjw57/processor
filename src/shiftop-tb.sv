@@ -1,4 +1,3 @@
-// Test: general purpose register
 `include "tbhelper.v"
 
 `TBPROLOGUE
@@ -29,7 +28,7 @@ integer i;
   `TBASSERT(VALUE_OUT === 8'h00, "pass through zeros");
 
   // zero
-  for(i=0; i<256; i=i+37)
+  for(i=0; i<256; i=i+1)
   begin
     `TBDELAY(2)
     VALUE_IN = i;
@@ -40,7 +39,7 @@ integer i;
   end
 
   // pass through
-  for(i=0; i<256; i=i+37)
+  for(i=0; i<256; i=i+1)
   begin
     `TBDELAY(2)
     VALUE_IN = i;
@@ -51,7 +50,7 @@ integer i;
   end
 
   // shift up
-  for(i=0; i<256; i=i+37)
+  for(i=0; i<256; i=i+1)
   begin
     `TBDELAY(2)
     VALUE_IN = i;
@@ -62,7 +61,7 @@ integer i;
   end
 
   // shift down
-  for(i=0; i<256; i=i+37)
+  for(i=0; i<256; i=i+1)
   begin
     `TBDELAY(2)
     VALUE_IN = i;
