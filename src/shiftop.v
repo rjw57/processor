@@ -10,6 +10,11 @@
 //  | 2'b01  | VALUE_OUT = VALUE_IN, carry_out = 1'b0                 |
 //  | 2'b10  | VALUE_OUT = VALUE_IN << 1, carry_out = VALUE_IN >> 7   |
 //  | 2'b11  | VALUE_OUT = VALUE_IN >> 1, carry_out = VALUE_IN & 0x1  |
+//
+// NOTE: in future we might want to change this from shift with carry out to
+// selectable logical shift, arithemtic shift or rotate. This might be possible
+// with a single extra 74153 which selects the two interpolated bits for shift
+// right/left based on two additional control lines.
 module shiftop #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [1:0] OP_SEL,     // operation select
