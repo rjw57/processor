@@ -28,6 +28,26 @@ module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
   output CARRY_OUT
 );
 
+// ALU Operations:
+//
+// Result given control lines. 'X' means that the bit pattern does not matter.
+//
+//  | Opcode  | Result     | Shift Op  | Shift Interp  | Logic Op  | Carry in  |
+//  |---------|------------|-----------|---------------|-----------|-----------|
+//  | 4'b0000 | LHS + RHS  | 2'b01     | 2'bXX         | 4'b1010   | 1'b0      |
+//  | 4'b0001 | LHS - RHS  | 2'b01     | 2'bXX         | 4'b0101   | 1'b1      |
+//  | 4'b0010 | LHS & RHS  | 2'b00     | 2'bXX         | 4'b1000   | 1'b0      |
+//  | 4'b0011 | LHS | RHS  | 2'b00     | 2'bXX         | 4'b1110   | 1'b0      |
+//  | 4'b0100 | LHS ^ RHS  | 2'b00     | 2'bXX         | 4'b0110   | 1'b0      |
+//  | 4'b0101 | ~RHS       | 2'b00     | 2'bXX         | 4'b0101   | 1'b0      |
+//  | 4'b0110 | LHS << 1   | 2'b10     | 2'b00         | 4'b0000   | 1'b0      |
+//  | 4'b0111 | LHS >> 1   | 2'b11     | 2'b00         | 4'b0000   | 1'b0      |
+//  | 4'b1000 | LHS ~>> 1  | 2'b11     | 2'b11         | 4'b0000   | 1'b0      |
+//  | 4'b1001 | LHS <<< 1  | 2'b10     | 2'b11         | 4'b0000   | 1'b0      |
+//  | 4'b1010 | LHS >>> 1  | 2'b11     | 2'b10         | 4'b0000   | 1'b0      |
+//
+// Note: '~>>' == arithmetic shift, '>>>' == rotate right, '<<<' == rotate left
+
 wire [7:0] shiftop_out;
 wire [7:0] logicop_out;
 wire [7:0] lhs_latch;
