@@ -7,27 +7,9 @@
 // After two clock cycles, addition has been performed.
 //
 // Addition carry in for addition applies on the next clock cycle and so one
-// should speciy carry one clock cycle *after* the LHS and RHS inputs are given.
+// should specify carry one clock cycle *after* the LHS and RHS inputs are given.
 //
-module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
-
-  // input
-  input [7:0] LHS,
-  input [7:0] RHS,
-
-  // 8 control lines for first stage
-  input [1:0] SHIFT_OP,     // shift op applied to LHS
-  input [1:0] SHIFT_INTERP, // interp select for LHS shift
-  input [3:0] LOGIC_OP,     // logical op applied (before shift)
-
-  // Input carry
-  input CARRY_IN,
-
-  // result
-  output [7:0] RESULT,
-  output CARRY_OUT
-);
-
+//
 // ALU Operations:
 //
 // Result given control lines. 'X' means that the bit pattern does not matter.
@@ -47,22 +29,53 @@ module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
 //  | 4'b1010 | LHS >>> 1  | 2'b11     | 2'b10         | 4'b0000   | 1'b0      |
 //
 // Note: '~>>' == arithmetic shift, '>>>' == rotate right, '<<<' == rotate left
+//
+module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
+
+  // input
+  input [7:0] LHS,
+  input [7:0] RHS,
+
+  // ALU opcode
+  input [3:0] OPCODE,
+
+  // Input carry
+  input CARRY_IN,
+
+  // result
+  output [7:0] RESULT,
+  output CARRY_OUT
+);
 
 wire [7:0] shiftop_out;
 wire [7:0] logicop_out;
 wire [7:0] lhs_latch;
 wire [7:0] rhs_latch;
 
+// Opcode ROM - matches table in module description. This is a 16 byte ROM which
+// is probably implemented via a diode matrix.
+reg [7:0] opcode_rom[0:2**4-1];
+
+initial
+begin
+  $readmemb("alurom.mem", opcode_rom);
+end
+
+wire [1:0] shift_op;
+wire [1:0] shift_interp;
+wire [3:0] logic_op;
+assign {shift_op, shift_interp, logic_op} = opcode_rom[OPCODE];
+
 // stage 1
 shiftop #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) shiftop(
-  .OP_SEL(SHIFT_OP),
-  .INTERP_SEL(SHIFT_INTERP),
+  .OP_SEL(shift_op),
+  .INTERP_SEL(shift_interp),
   .VALUE_IN(LHS),
   .VALUE_OUT(shiftop_out)
 );
 
 logicop #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) logicop(
-  .OP_SEL(LOGIC_OP),
+  .OP_SEL(logic_op),
   .LHS_IN(LHS),
   .RHS_IN(RHS),
   .VALUE_OUT(logicop_out)

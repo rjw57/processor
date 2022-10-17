@@ -3,9 +3,7 @@
 `TBPROLOGUE
 
 // Control lines
-reg [1:0] SHIFT_OP;
-reg [1:0] SHIFT_INTERP;
-reg [3:0] LOGIC_OP;
+reg [3:0] OPCODE;
 reg CARRY_IN;
 
 // Values
@@ -25,9 +23,7 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) dut(
   .CLK(CLK),
   .LHS(LHS),
   .RHS(RHS),
-  .SHIFT_OP(SHIFT_OP),
-  .SHIFT_INTERP(SHIFT_INTERP),
-  .LOGIC_OP(LOGIC_OP),
+  .OPCODE(OPCODE),
   .CARRY_IN(CARRY_IN),
   .RESULT(RESULT),
   .CARRY_OUT(CARRY_OUT)
@@ -43,9 +39,7 @@ integer i, j;
   RHS_prev = 8'h00;
 
   // Addition
-  SHIFT_OP = 2'b01;
-  SHIFT_INTERP = 2'b00;
-  LOGIC_OP = 4'b1010;
+  OPCODE = 2'b00;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
 
@@ -73,10 +67,8 @@ integer i, j;
     end
   end
 
-  // Subtraction is addition with 2s complement of input
-  SHIFT_OP = 2'b01;
-  SHIFT_INTERP = 2'b00;
-  LOGIC_OP = 4'b0101;
+  // Subtraction
+  OPCODE = 2'b01;
   CARRY_IN = 1'b1;
   `TBDELAY(2)
 
