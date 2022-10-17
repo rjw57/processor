@@ -6,20 +6,10 @@
 // After one clock cycle, bitwise operations and shifting has been performed.
 // After two clock cycles, addition has been performed.
 //
-// Addition carry in selection for addition applies on the next clock cycle and
-// so one should speciy carry selection one clock cycle *after* the LHS and RHS
-// inputs are given. Addition carry in selection is:
+// Addition carry in for addition applies on the next clock cycle and so one
+// should speciy carry one clock cycle *after* the LHS and RHS inputs are given.
 //
-//  | CARRY_SEL | adddition carry in      |
-//  |-----------|-------------------------|
-//  | 2'b00     | 1'b0                    |
-//  | 2'b01     | 1'b1                    |
-//  | 2'b10     | current arith carry out |
-//  | 2'b11     | unused                  |
-//
-module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
-(
-  input CLK,
+module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
 
   // input
   input [7:0] LHS,
@@ -30,8 +20,8 @@ module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
   input [1:0] SHIFT_INTERP, // interp select for LHS shift
   input [3:0] LOGIC_OP,     // logical op applied (before shift)
 
-  // 2 control lines for second stage
-  input [1:0] CARRY_SEL,    // carry select for addition
+  // Input carry
+  input CARRY_IN,
 
   // result
   output [7:0] RESULT,
@@ -42,7 +32,6 @@ wire [7:0] shiftop_out;
 wire [7:0] logicop_out;
 wire [7:0] lhs_latch;
 wire [7:0] rhs_latch;
-wire add_carry_in;
 
 // stage 1
 shiftop #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) shiftop(
@@ -78,7 +67,7 @@ ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_reg(
 adder #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) adder(
   .LHS(lhs_latch),
   .RHS(rhs_latch),
-  .CARRY_IN(add_carry_in),
+  .CARRY_IN(CARRY_IN),
   .RESULT(RESULT),
   .CARRY_OUT(CARRY_OUT)
 );
