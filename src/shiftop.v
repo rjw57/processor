@@ -4,45 +4,52 @@
 //
 // Operations:
 //
-//  | OP_SEL | operation                                              |
-//  |--------|--------------------------------------------------------|
-//  | 2'b00  | VALUE_OUT = 8'b0, carry_out = 1'b0                     |
-//  | 2'b01  | VALUE_OUT = VALUE_IN, carry_out = 1'b0                 |
-//  | 2'b10  | VALUE_OUT = VALUE_IN << 1, carry_out = VALUE_IN >> 7   |
-//  | 2'b11  | VALUE_OUT = VALUE_IN >> 1, carry_out = VALUE_IN & 0x1  |
+//  | OP_SEL | operation                            |
+//  |--------|--------------------------------------|
+//  | 2'b00  | VALUE_OUT = 8'b0                     |
+//  | 2'b01  | VALUE_OUT = VALUE_IN                 |
+//  | 2'b10  | VALUE_OUT = {VALUE_IN[6:0], interp}  |
+//  | 2'b11  | VALUE_OUT = {interp, VALUE_IN[7:1]}  |
 //
-// NOTE: in future we might want to change this from shift with carry out to
-// selectable logical shift, arithemtic shift or rotate. This might be possible
-// with a single extra 74153 which selects the two interpolated bits for shift
-// right/left based on two additional control lines.
+// Interpolation
+//
+//  | INTERP_SEL  | interp      |
+//  |-------------|-------------|
+//  | 2'b00       | 1'b0        |
+//  | 2'b01       | 1'b1        |
+//  | 2'b10       | VALUE_IN[0] |
+//  | 2'b11       | VALUE_IN[7] |
+//
 module shiftop #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   input [1:0] OP_SEL,     // operation select
+  input [1:0] INTERP_SEL, // interpolation select
   input [7:0] VALUE_IN,   // input value
-  output [7:0] VALUE_OUT, // output value
-  output CARRY_OUT        // carry flag
+  output [7:0] VALUE_OUT  // output value
 );
 
 wire [7:0] results [0:3];
-wire carries [0:3];
 
 wire [7:0] selected_result;
-wire selected_carry, unused_select;
+wire selected_interp, unused_select;
 
 assign VALUE_OUT = selected_result;
-assign CARRY_OUT = selected_carry;
+
+// Selector for interp
+ttl_74153 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) carry_sel(
+  .Enable_bar(2'b0),
+  .Select(INTERP_SEL),
+  .A_2D({
+    {VALUE_IN[7], VALUE_IN[0], 1'b1, 1'b0},
+    4'b0
+  }),
+  .Y({selected_interp, unused_select})
+);
 
 assign results[0] = 8'b0;
-assign carries[0] = 1'b0;
-
 assign results[1] = VALUE_IN;
-assign carries[1] = 1'b0;
-
-assign results[2] = {VALUE_IN[6:0], 1'b0};
-assign carries[2] = VALUE_IN[7];
-
-assign results[3] = {1'b0, VALUE_IN[7:1]};
-assign carries[3] = VALUE_IN[0];
+assign results[2] = {VALUE_IN[6:0], selected_interp};
+assign results[3] = {selected_interp, VALUE_IN[7:1]};
 
 genvar i;
 generate
@@ -59,16 +66,5 @@ generate
     );
   end
 endgenerate
-
-// Selector for carry
-ttl_74153 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) carry_sel(
-  .Enable_bar(2'b0),
-  .Select(OP_SEL),
-  .A_2D({
-    {carries[3], carries[2], carries[1], carries[0]},
-    4'b0
-  }),
-  .Y({selected_carry, unused_select})
-);
 
 endmodule
