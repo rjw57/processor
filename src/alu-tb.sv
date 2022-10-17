@@ -33,8 +33,8 @@ integer i, j;
 
 `TBBEGIN
   // Initial values
-  LHS = 8'h00;
-  RHS = 8'h00;
+  LHS = 8'hFF;
+  RHS = 8'hFF;
   LHS_prev = 8'h00;
   RHS_prev = 8'h00;
 
@@ -42,9 +42,6 @@ integer i, j;
   OPCODE = 2'b00;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
-
-  LHS_prev <= LHS; RHS_prev <= RHS;
-  LHS <= 8'h00; RHS <= 8'h00;
   `TBTICK
 
   for(i=0; i<256; i=i+37)
@@ -71,9 +68,6 @@ integer i, j;
   OPCODE = 2'b01;
   CARRY_IN = 1'b1;
   `TBDELAY(2)
-
-  LHS_prev <= LHS; RHS_prev <= RHS;
-  LHS <= 8'h00; RHS <= 8'h00;
   `TBTICK
 
   for(i=0; i<256; i=i+37)
