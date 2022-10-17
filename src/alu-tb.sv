@@ -39,7 +39,7 @@ integer i, j;
   RHS_prev = 8'h00;
 
   // Addition
-  OPCODE = 2'b00;
+  OPCODE = 4'h0;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -64,8 +64,34 @@ integer i, j;
     end
   end
 
+  // Addition w/carry
+  OPCODE = 4'h0;
+  CARRY_IN = 1'b1;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === (8'hFF & (1 + LHS_prev + RHS_prev)),
+        $sformatf(
+          "(1 + %0d + %0d) mod 256: expect %0d, got %0d",
+          LHS_prev, RHS_prev, (8'hFF & (1 + LHS_prev + RHS_prev)), RESULT
+        )
+      );
+    end
+  end
+
   // Subtraction
-  OPCODE = 2'b01;
+  OPCODE = 4'h1;
   CARRY_IN = 1'b1;
   `TBDELAY(2)
   `TBTICK
@@ -90,5 +116,237 @@ integer i, j;
     end
   end
 
-  // TODO: other operations
+  // Logical AND
+  OPCODE = 4'h2;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === (LHS_prev & RHS_prev),
+        $sformatf(
+          "%0d & %0d mod 256: expect %0d, got %0d",
+          LHS_prev, RHS_prev, (LHS_prev & RHS_prev), RESULT
+        )
+      );
+    end
+  end
+
+  // Logical OR
+  OPCODE = 4'h3;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === (LHS_prev | RHS_prev),
+        $sformatf(
+          "%0d | %0d: expect %0d, got %0d",
+          LHS_prev, RHS_prev, (LHS_prev | RHS_prev), RESULT
+        )
+      );
+    end
+  end
+
+  // Logical XOR
+  OPCODE = 4'h4;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === (LHS_prev ^ RHS_prev),
+        $sformatf(
+          "%0d ^ %0d: expect %0d, got %0d",
+          LHS_prev, RHS_prev, (LHS_prev ^ RHS_prev), RESULT
+        )
+      );
+    end
+  end
+
+  // ~RHS
+  OPCODE = 4'h5;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === ~RHS_prev,
+        $sformatf(
+          "~%0d: expect %0d, got %0d",
+          RHS_prev, ~RHS_prev, RESULT
+        )
+      );
+    end
+  end
+
+  // LHS << 1
+  OPCODE = 4'h6;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === {LHS_prev[6:0], 1'b0},
+        $sformatf(
+          "%0d << 1: expect %0d, got %0d",
+          LHS_prev, {LHS_prev[6:0], 1'b0}, RESULT
+        )
+      );
+    end
+  end
+
+  // LHS >> 1
+  OPCODE = 4'h7;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === {1'b0, LHS_prev[7:1]},
+        $sformatf(
+          "%0d >> 1: expect %0d, got %0d",
+          LHS_prev, {1'b0, LHS_prev[7:1]}, RESULT
+        )
+      );
+    end
+  end
+
+  // LHS ~>> 1
+  OPCODE = 4'h8;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === {LHS_prev[7], LHS_prev[7:1]},
+        $sformatf(
+          "%0d ~>> 1: expect %0d, got %0d",
+          LHS_prev, {LHS_prev[7], LHS_prev[7:1]}, RESULT
+        )
+      );
+    end
+  end
+
+  // LHS <<< 1
+  OPCODE = 4'h9;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === {LHS_prev[6:0], LHS_prev[7]},
+        $sformatf(
+          "%0d <<< 1: expect %0d, got %0d",
+          LHS_prev, {LHS_prev[6:0], LHS_prev[7]}, RESULT
+        )
+      );
+    end
+  end
+
+  // LHS >>> 1
+  OPCODE = 4'hA;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === {LHS_prev[0], LHS_prev[7:1]},
+        $sformatf(
+          "%0d >>> 1: expect %0d, got %0d",
+          LHS_prev, {LHS_prev[0], LHS_prev[7:1]}, RESULT
+        )
+      );
+    end
+  end
 `TBEND

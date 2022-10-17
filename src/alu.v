@@ -105,6 +105,4 @@ adder #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) adder(
   .CARRY_OUT(CARRY_OUT)
 );
 
-// TODO
-
 endmodule
