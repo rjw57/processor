@@ -1,5 +1,5 @@
 // ROM module
-module rom 
+module rom
 #(
   parameter ROM_CONTENTS = "../roms/zeros.mem",
   ADDR_WIDTH = 15,
