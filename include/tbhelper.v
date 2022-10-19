@@ -2,6 +2,11 @@
 // Adapted from https://github.com/TimRudy/ice-chips-verilog
 `default_nettype none
 
+// Test bench timeout
+`ifndef TBTIMEOUT
+`define TBTIMEOUT 5000
+`endif
+
 `define TBSETUP reg tb_all_asserts_ok = 1'b1;
 `ifdef TB_SET_EXIT_CODE
 `define TBDONE $finish_and_return(!tb_all_asserts_ok);
@@ -35,7 +40,13 @@ module testbench #( \
   `TBSETUP \
   `TBCLK_WAIT_TICK_METHOD(wait_tick) \
   initial CLK = 1'b0; \
-  always #($max(1, 20 * DELAY_RISE)) CLK = ~CLK;
+  always #($max(1, 20 * DELAY_RISE)) CLK = ~CLK; \
+  initial \
+  begin \
+    #(`TBTIMEOUT) \
+    $display("ERROR: testbench timed out"); \
+    $finish_and_return(1); \
+  end
 
 `define TBBEGIN \
   initial \
