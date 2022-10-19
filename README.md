@@ -5,8 +5,10 @@ Experiments in verilog.
 ## Testing
 
 ```console
-$ cd src
-$ make test
+$ python3 -m venv ./venv
+$ . ./venv/bin/activate
+$ pip install -e .
+$ make -C verilog test
 ```
 
 To look at output, load `.vcd` files into GtkWave.
