@@ -2,7 +2,10 @@ module processor
 #(
   parameter
   DELAY_RISE = 0,
-  DELAY_FALL = 0
+  DELAY_FALL = 0,
+  ROM_READ_DELAY = 0,
+  RAM_READ_DELAY = 0,
+  RAM_WRITE_DELAY = 0
 )
 (
   input CLK,

@@ -27,34 +27,46 @@ LOG = logging.getLogger(__name__)
 
 # Assembler grammar
 GRAMMAR = """
-    // A source file consists of items separated by newlines
+    // Tokens
+    %import common.NEWLINE -> _NEWLINE
+    %import common.CNAME -> IDENTIFIER
+    %import common (DIGIT, HEXDIGIT, ESCAPED_STRING)
+
+    DECIMAL_LITERAL: DIGIT+
+    HEX_LITERAL: "0x" HEXDIGIT+
+    BINARY_LITERAL: "0b" ("0".."1")+
+    DIRECTIVE_NAME: "." IDENTIFIER
+    LABEL: IDENTIFIER ":"
+    VARIABLE_REF: "$" IDENTIFIER
+
+    // Rules
     start: (_item? _NEWLINE)* _item?
 
     _item: directive
          | label+ instruction?
          | instruction
 
-    DECIMAL_LITERAL: DIGIT+
-    HEX_LITERAL: "0x" HEXDIGIT+
-    BINARY_LITERAL: "0b" ("0".."1")+
-
-    literal_integer: DECIMAL_LITERAL
-                   | HEX_LITERAL
-                   | BINARY_LITERAL
-    literal_string: ESCAPED_STRING
-
-    DIRECTIVE_NAME: "." IDENTIFIER
+    // Assembler directive
     directive: DIRECTIVE_NAME [_directiveparams]
     _directiveparams: _directiveparam ("," _directiveparam)*
     _directiveparam: literal_integer
                    | literal_string
 
-    LABEL: IDENTIFIER ":"
+    // Labels and instructions
     label: LABEL
-
     instruction: IDENTIFIER [_operands]
     _operands: expression ("," expression)*
 
+    // Literals
+    literal_integer: DECIMAL_LITERAL
+                   | HEX_LITERAL
+                   | BINARY_LITERAL
+    literal_string: ESCAPED_STRING
+
+    // Registers
+    registerref: IDENTIFIER
+
+    // Expressions
     ?expression: registerref | indirectregref | bitorexpr
     ?!bitorexpr: (bitxorexpr "|")* bitxorexpr
     ?!bitxorexpr: (bitandexpr "^")* bitandexpr
@@ -66,21 +78,16 @@ GRAMMAR = """
     ?atomexpr: "(" expression ")"
              | constintexpr
              | variablerefexpr
-    VARIABLE_REF: "$" IDENTIFIER
     !constintexpr: literal_integer
     variablerefexpr: VARIABLE_REF
     indirectregref: "[" registerref "]"
-    registerref: IDENTIFIER
 
     !_shiftop: "<<" | ">>"
     !_mulop: "*" | "/"
     !_addop: "+" | "-"
     !_unaryop: "+" | "-" | "~" | "<" | ">"
 
-    %import common.NEWLINE -> _NEWLINE
-    %import common.CNAME -> IDENTIFIER
-    %import common (DIGIT, HEXDIGIT, ESCAPED_STRING)
-
+    // Ignore comments and whitespace
     %import common (CPP_COMMENT, C_COMMENT, WS_INLINE)
     %ignore CPP_COMMENT
     %ignore C_COMMENT
@@ -209,11 +216,11 @@ class Instruction:
 class AssemblerTransformer(lark.Transformer):
     _assembly: dict[int, typing.Union[int, Expression]]
     _instr_ptr: int
-    _block_size: int
     _symbol_table: dict[str, int]
+    _export_range: tuple[int, int]
 
     def __init__(self):
-        self._block_size = 256
+        self._export_range = (0, 255)
         self._instr_ptr = 0
         self._assembly = {}
         self._symbol_table = {}
@@ -235,19 +242,14 @@ class AssemblerTransformer(lark.Transformer):
                     raise RuntimeError(f"could not evaluate: {v!r}")
                 self._assembly[k] = sv & 0xFF
 
-        if len(self._assembly) == 0:
-            max_loc = 0
-        else:
-            max_loc = max(self._assembly.keys())
-        output_size = self._block_size * (
-            (max_loc + self._block_size - 1) // self._block_size
-        )
         output = [
             0,
-        ] * output_size
+        ] * (1 + self._export_range[1] - self._export_range[0])
         for k, v in self._assembly.items():
+            if k < self._export_range[0] or k > self._export_range[1]:
+                continue
             assert isinstance(v, int)
-            output[k] = v
+            output[k - self._export_range[0]] = v
 
         return bytes(output)
 
@@ -261,10 +263,13 @@ class AssemblerTransformer(lark.Transformer):
             assert len(directive.parameters) == 1
             assert isinstance(directive.parameters[0], int)
             self._instr_ptr = directive.parameters[0]
-        elif directive.name == "blocksize":
-            assert len(directive.parameters) == 1
-            assert isinstance(directive.parameters[0], int)
-            self._block_size = directive.parameters[0]
+        elif directive.name == "export":
+            assert len(directive.parameters) == 2
+            s, e = directive.parameters[:2]
+            assert isinstance(s, int)
+            assert isinstance(e, int)
+            assert e >= e
+            self._export_range = (s, e)
         elif directive.name == "db":
             for p in directive.parameters:
                 if isinstance(p, int):
@@ -399,15 +404,17 @@ def main():
     transformer.transform(tree)
     output = transformer.link()
     with open(output_path, "w") as fobj:
-        for addr, line_bytes in itertools.groupby(enumerate(output), key=lambda v: v[0] >> 4):
+        for addr, line_bytes in itertools.groupby(
+            enumerate(output), key=lambda v: v[0] >> 4
+        ):
             line_bytes = bytes(v for _, v in line_bytes)
-            data_s = ' '.join(f'{v:02x}' for v in line_bytes)
+            data_s = " ".join(f"{v:02x}" for v in line_bytes)
             fobj.write(data_s)
-            fobj.write(' ' * (50 - len(data_s)))
-            fobj.write(f'// {addr << 4:04x} : |')
+            fobj.write(" " * (50 - len(data_s)))
+            fobj.write(f"// {addr << 4:04x} : |")
             for v in line_bytes:
-                if v < 0x20 or v >= 0x7f:
-                    fobj.write('.')
+                if v < 0x20 or v >= 0x7F:
+                    fobj.write(".")
                 else:
                     fobj.write(chr(v))
-            fobj.write('|\n')
+            fobj.write("|\n")
