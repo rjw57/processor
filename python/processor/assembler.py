@@ -28,19 +28,25 @@ LOG = logging.getLogger(__name__)
 # Assembler grammar
 GRAMMAR = """
     // Tokens
-    %import common.NEWLINE -> _NEWLINE
-    %import common.CNAME -> IDENTIFIER
+    %import common.NEWLINE
+    %import common.CNAME
     %import common (DIGIT, HEXDIGIT, ESCAPED_STRING)
 
+    BINARY_LITERAL: "0b" ("0".."1")+
     DECIMAL_LITERAL: DIGIT+
     HEX_LITERAL: "0x" HEXDIGIT+
-    BINARY_LITERAL: "0b" ("0".."1")+
-    DIRECTIVE_NAME: "." IDENTIFIER
-    LABEL: IDENTIFIER ":"
-    VARIABLE_REF: "$" IDENTIFIER
+
+    DIRECTIVE_NAME: "." CNAME
+    LABEL: CNAME ":"
+    VARIABLE_REF: "$" CNAME
+
+    ADDOP: "+" | "-"
+    MULOP: "*" | "/"
+    SHIFTOP: "<<" | ">>"
+    UNARYOP: "+" | "-" | "~" | "<" | ">"
 
     // Rules
-    start: (_item? _NEWLINE)* _item?
+    start: (_item? NEWLINE)* _item?
 
     _item: directive
          | label+ instruction?
@@ -48,14 +54,14 @@ GRAMMAR = """
 
     // Assembler directive
     directive: DIRECTIVE_NAME [_directiveparams]
-    _directiveparams: _directiveparam ("," _directiveparam)*
+    _directiveparams: (_directiveparam ",")* _directiveparam
     _directiveparam: literal_integer
                    | literal_string
 
     // Labels and instructions
     label: LABEL
-    instruction: IDENTIFIER [_operands]
-    _operands: expression ("," expression)*
+    instruction: CNAME [_operands]
+    _operands: (expression ",")* expression
 
     // Literals
     literal_integer: DECIMAL_LITERAL
@@ -64,28 +70,23 @@ GRAMMAR = """
     literal_string: ESCAPED_STRING
 
     // Registers
-    registerref: IDENTIFIER
+    registerref: CNAME
 
-    // Expressions
+    // Expressions - precedence mirrors C
     ?expression: registerref | indirectregref | bitorexpr
-    ?!bitorexpr: (bitxorexpr "|")* bitxorexpr
-    ?!bitxorexpr: (bitandexpr "^")* bitandexpr
-    ?!bitandexpr: (shiftexpr "&")* shiftexpr
-    ?!shiftexpr: (addexpr _shiftop)* addexpr
-    ?!addexpr: (mulexpr _addop)* mulexpr
-    ?!mulexpr: (unaryexpr _mulop)* unaryexpr
-    ?!unaryexpr: _unaryop* atomexpr
+    ?bitorexpr: (bitxorexpr "|")* bitxorexpr
+    ?bitxorexpr: (bitandexpr "^")* bitandexpr
+    ?bitandexpr: (shiftexpr "&")* shiftexpr
+    ?shiftexpr: (addexpr SHIFTOP)* addexpr
+    ?addexpr: (mulexpr ADDOP)* mulexpr
+    ?mulexpr: (unaryexpr MULOP)* unaryexpr
+    ?unaryexpr: UNARYOP* atomexpr
     ?atomexpr: "(" expression ")"
              | constintexpr
              | variablerefexpr
-    !constintexpr: literal_integer
+    constintexpr: literal_integer
     variablerefexpr: VARIABLE_REF
     indirectregref: "[" registerref "]"
-
-    !_shiftop: "<<" | ">>"
-    !_mulop: "*" | "/"
-    !_addop: "+" | "-"
-    !_unaryop: "+" | "-" | "~" | "<" | ">"
 
     // Ignore comments and whitespace
     %import common (CPP_COMMENT, C_COMMENT, WS_INLINE)
@@ -301,7 +302,7 @@ class AssemblerTransformer(lark.Transformer):
                 encoding_components.append(f"IREG{child.register}")
             elif isinstance(child, Expression):
                 encoding_components.append("IMM")
-                immediates.append(child.evaluate())
+                immediates.append(child.evaluate() & 0xff)
             else:
                 assert False, f"should not be reached with child: {child!r}"
 
