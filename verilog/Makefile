@@ -55,13 +55,10 @@ clean:
 $(PIPELINE_ROMS): pipelineromgen.py
 	$(PYTHON) "$<"
 
-$(TEST_PROG_VCDS): %.vcd: %.asm execution.sv $(PIPELINE_ROMS)
-	$(PASM) --output execution.mem "$<"
-	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$*.vvp" \
-		'-Pexecution.DUMP_FILENAME="$*.vcd"' \
+$(TEST_PROG_TARGETS): test-prog-%: execution.sv $(PIPELINE_ROMS)
+	$(PASM) --output execution.mem "asm/test-$*.asm"
+	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "asm/test-$*.vvp" \
+		'-Pexecution.DUMP_FILENAME="asm/test-$*.vcd"' \
 		-s execution "execution.sv"
-	"$(VVP)" "$*.vvp"
-.PHONY: $(TEST_PROG_VCDS)
-
-$(TEST_PROG_TARGETS): $(TEST_PROGS:.asm=.vcd)
+	"$(VVP)" "asm/test-$*.vvp"
 .PHONY: $(TEST_PROG_TARGETS)
