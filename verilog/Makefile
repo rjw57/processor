@@ -17,13 +17,25 @@ TEST_VVP_FILES:=$(TEST_V_FILES:.sv=.vvp)
 TEST_VCD_FILES:=$(TEST_V_FILES:.sv=.vcd)
 TEST_TARGETS:=$(addprefix test-,$(TEST_V_FILES:-tb.sv=))
 
+TEST_PROGS:=$(wildcard asm/test-*.asm)
+TEST_PROG_VCDS:=$(TEST_PROGS:.asm=.vcd)
+TEST_PROG_VVPS:=$(TEST_PROGS:.asm=.vcd)
+TEST_PROG_TARGETS:=$(addprefix test-prog-,$(TEST_PROGS:asm/test-%.asm=%))
+
 PIPELINE_ROMS:=pipeline-1a.mem pipeline-1b.mem pipeline-2a.mem pipeline-2b.mem
 
 .DEFAULT: test
 
-test: $(TEST_TARGETS)
-	@echo "all testbenches passed"
+test: testbenches testprogs
 .PHONY: test
+
+testbenches: $(TEST_TARGETS)
+	@echo "all test benches passed"
+.PHONY: testbenches
+
+testprogs: $(TEST_PROG_TARGETS)
+	@echo "all test programs ran"
+.PHONY: testprogs
 
 $(TEST_TARGETS): test-%: $(PIPELINE_ROMS)
 	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$*-tb.vvp" \
@@ -37,15 +49,19 @@ clean:
 	rm -f $(TEST_VVP_FILES)
 	rm -f $(TEST_VCD_FILES)
 	rm -f $(PIPELINE_ROMS)
-	rm -f asm/*.vcd
+	rm -f $(TEST_PROG_VCDS) $(TEST_PROG_VVPS)
 .PHONY: clean
 
 $(PIPELINE_ROMS): pipelineromgen.py
 	$(PYTHON) "$<"
 
-%.vcd: %.asm execution.sv $(PIPELINE_ROMS)
+$(TEST_PROG_VCDS): %.vcd: %.asm execution.sv $(PIPELINE_ROMS)
 	$(PASM) --output execution.mem "$<"
 	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$*.vvp" \
 		'-Pexecution.DUMP_FILENAME="$*.vcd"' \
 		-s execution "execution.sv"
 	"$(VVP)" "$*.vvp"
+.PHONY: $(TEST_PROG_VCDS)
+
+$(TEST_PROG_TARGETS): $(TEST_PROGS:.asm=.vcd)
+.PHONY: $(TEST_PROG_TARGETS)

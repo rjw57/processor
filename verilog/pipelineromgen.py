@@ -10,7 +10,7 @@ class Line(enum.IntFlag):
     IncrementPCRA0 = 1 << 0
     IncrementPCRA1 = 1 << 1
     Halt = 1 << 2
-    Bit3 = 1 << 3
+    InstrDispatchBar = 1 << 3
     Bit4 = 1 << 4
     Bit5 = 1 << 5
     Bit6 = 1 << 6
@@ -46,12 +46,16 @@ class Line(enum.IntFlag):
 def control_lines(flags, opcode):
     inc_pc_flag = Line.IncrementPCRA0
 
+    # Default to increment PC
     out = inc_pc_flag
 
-    if opcode == Encoding.HALT.value[0]:
+    if opcode == Encoding.HALT.value[0]:  # halt
         # On halt, stop incrementing the PC.
         out &= ~inc_pc_flag
         out |= Line.Halt
+    elif opcode == Encoding.MOV_REGA_IMM.value[0]:  # mov a, immediate
+        # Prevent immediate from being dispatched
+        out |= Line.InstrDispatchBar
 
     return out
 

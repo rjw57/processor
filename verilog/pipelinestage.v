@@ -22,6 +22,8 @@ module pipelinestage
 reg [7:0] opcode_next;
 wire [7:0] opcode = PREV_STAGE_IN;
 wire [ADDR_WIDTH-9:0] flags = FLAGS;
+wire [7:0] rom_a_out;
+wire [7:0] rom_b_out;
 
 assign NEXT_STAGE_OUT = opcode_next;
 
@@ -31,6 +33,21 @@ ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) opcode_latch(
   .D          (opcode),
   .Clk        (CLK),
   .Q          (opcode_next)
+);
+
+// control line latches
+ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) ctrl_1_latch(
+  .Enable_bar (1'b0),
+  .D          (rom_a_out),
+  .Clk        (CLK),
+  .Q          (CONTROL_OUT[7:0])
+);
+
+ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) ctrl_2_latch(
+  .Enable_bar (1'b0),
+  .D          (rom_b_out),
+  .Clk        (CLK),
+  .Q          (CONTROL_OUT[15:8])
 );
 
 rom #(
@@ -44,7 +61,7 @@ rom #(
   .OE_bar(1'b0),
   .CS_bar(1'b0),
   .A({flags, opcode}),
-  .Q(CONTROL_OUT[7:0])
+  .Q(rom_a_out)
 );
 
 rom #(
@@ -58,7 +75,7 @@ rom #(
   .OE_bar(1'b0),
   .CS_bar(1'b0),
   .A({flags, opcode}),
-  .Q(CONTROL_OUT[15:8])
+  .Q(rom_b_out)
 );
 
 endmodule

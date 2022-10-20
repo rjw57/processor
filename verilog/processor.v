@@ -18,15 +18,14 @@ module processor
 wire [15:0] mem_addr_bus;
 wire [7:0] mem_data_bus;
 
-// Instruction fetch
-wire [7:0] next_instruction = mem_data_bus;
-
 // Pipeline stages
+wire [7:0] next_instruction;
 wire [7:0] pipeline_1_out;
 wire [15:0] pipeline_1_control_out;
 pipelinestage #(
   .DELAY_RISE(DELAY_RISE),
   .DELAY_FALL(DELAY_FALL),
+  .READ_DELAY(DELAY_RISE * 4),
   .A_CONTENTS("./pipeline-1a.mem"),
   .B_CONTENTS("./pipeline-1b.mem")
 ) pipeline_1 (
@@ -42,6 +41,7 @@ wire [15:0] pipeline_2_control_out;
 pipelinestage #(
   .DELAY_RISE(DELAY_RISE),
   .DELAY_FALL(DELAY_FALL),
+  .READ_DELAY(DELAY_RISE * 4),
   .A_CONTENTS("./pipeline-2a.mem"),
   .B_CONTENTS("./pipeline-2b.mem")
 ) pipeline_2 (
@@ -56,6 +56,13 @@ pipelinestage #(
 wire ctrl_inc_pcra0 = pipeline_1_control_out[0];
 wire ctrl_inc_pcra1 = pipeline_1_control_out[1];
 wire ctrl_halt = pipeline_1_control_out[2];
+wire ctrl_instr_dispatch_bar = pipeline_1_control_out[3];
+
+// Instruction dispatch. Simulate a line driver chip with pull downs on the
+// output. Note that if we use a 74541 then there are two active low output
+// enable lines which we tie to RST_bar and ctrl_instr_dispatch_bar.
+assign #(DELAY_RISE, DELAY_FALL) next_instruction =
+  (ctrl_instr_dispatch_bar | !RST_bar) ? 8'h00 : mem_data_bus;
 
 // Halt line
 assign HALT = ctrl_halt;

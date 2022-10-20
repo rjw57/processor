@@ -34,6 +34,7 @@ pipelinestage #(
   `TBDELAY(2)
   FLAGS = 7'b0001111;
 
+  `TBTICK
   `TBDELAY(2)
   `TBASSERT(CONTROL_OUT === {8'd8, 8'd8}, "ROM outputs as expected");
 `TBEND
