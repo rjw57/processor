@@ -8,5 +8,10 @@ class Encoding(enum.Enum):
     MOV_REGA_IMM        = [0x51, '#0']
     MOV_REGA_IREGSI     = [0x61]
 
-class Opcodes:
-    pass
+
+# Generate an IntEnum of opcode values from the first value in the instruction
+# encoding.
+Opcode = enum.IntEnum('Opcodes', (
+    (encoding.name, encoding.value[0])
+    for encoding in Encoding
+))

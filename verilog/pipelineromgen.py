@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import enum
 
-from processor.encoding import Encoding
+from processor.encoding import Opcode
 
 ADDR_WIDTH = 15
 
@@ -49,11 +49,11 @@ def control_lines(flags, opcode):
     # Default to increment PC
     out = inc_pc_flag
 
-    if opcode == Encoding.HALT.value[0]:  # halt
+    if opcode == Opcode.HALT:
         # On halt, stop incrementing the PC.
         out &= ~inc_pc_flag
         out |= Line.Halt
-    elif opcode == Encoding.MOV_REGA_IMM.value[0]:  # mov a, immediate
+    elif opcode == Opcode.MOV_REGA_IMM:
         # Prevent immediate from being dispatched
         out |= Line.InstrDispatchBar
 
