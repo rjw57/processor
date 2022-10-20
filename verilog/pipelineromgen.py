@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import enum
 
+from processor.encoding import Encoding
+
 ADDR_WIDTH = 15
 
-class Line(enum.IntEnum):
+class Line(enum.IntFlag):
     # Stage 1
     IncrementPCRA0 = 1 << 0
     IncrementPCRA1 = 1 << 1
-    Bit2 = 1 << 2
+    Halt = 1 << 2
     Bit3 = 1 << 3
     Bit4 = 1 << 4
     Bit5 = 1 << 5
@@ -42,12 +44,21 @@ class Line(enum.IntEnum):
 
 
 def control_lines(flags, opcode):
-    return 0
+    inc_pc_flag = Line.IncrementPCRA0
+
+    out = inc_pc_flag
+
+    if opcode == Encoding.HALT.value[0]:
+        # On halt, stop incrementing the PC.
+        out &= ~inc_pc_flag
+        out |= Line.Halt
+
+    return out
 
 
 def main():
     roms = {'1a': [], '1b': [], '2a': [], '2b': []}
-    for addr in range(2**ADDR_WIDTH - 1):
+    for addr in range(2**ADDR_WIDTH):
         lines = control_lines(addr >> 8, addr & 0xff)
         roms['1a'].append(lines & 0xff)
         roms['1b'].append((lines >> 8) & 0xff)
@@ -57,7 +68,7 @@ def main():
     for suffix, values in roms.items():
         with open(f'pipeline-{suffix}.mem', 'w') as output:
             for value in values:
-                output.write(f'{value:04x}\n')
+                output.write(f'{value:02x}\n')
 
 
 if __name__ == '__main__':

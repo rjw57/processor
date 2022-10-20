@@ -5,6 +5,7 @@ IVERILOG_FLAGS:=\
 	-Wanachronisms -Wimplicit -Wtimescale -Wportbind
 VVP?=vvp
 PYTHON?=python3
+PASM?=pasm
 
 VERBOSE?=
 ifneq ($(VERBOSE),)
@@ -36,7 +37,15 @@ clean:
 	rm -f $(TEST_VVP_FILES)
 	rm -f $(TEST_VCD_FILES)
 	rm -f $(PIPELINE_ROMS)
+	rm -f asm/*.vcd
 .PHONY: clean
 
 $(PIPELINE_ROMS): pipelineromgen.py
 	$(PYTHON) "$<"
+
+%.vcd: %.asm execution.sv $(PIPELINE_ROMS)
+	$(PASM) --output execution.mem "$<"
+	"$(IVERILOG)" $(IVERILOG_FLAGS) -o "$*.vvp" \
+		'-Pexecution.DUMP_FILENAME="$*.vcd"' \
+		-s execution "execution.sv"
+	"$(VVP)" "$*.vvp"

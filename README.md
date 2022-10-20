@@ -13,6 +13,13 @@ $ make -C verilog test
 
 To look at output, load `.vcd` files into GtkWave.
 
+## Execution
+
+```console
+$ cd verilog/
+$ make asm/mov-immediate.vcd
+```
+
 ## Requirements
 
 - Icarus verilog

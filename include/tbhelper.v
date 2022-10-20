@@ -4,7 +4,7 @@
 
 // Test bench timeout
 `ifndef TBTIMEOUT
-`define TBTIMEOUT 5000
+`define TBTIMEOUT 5000000
 `endif
 
 `define TBSETUP reg tb_all_asserts_ok = 1'b1;
