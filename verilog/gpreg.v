@@ -1,7 +1,7 @@
 // 8-bit general purpose register with synchronous load and asynchronous assert.
 //
 //
-// Uses 4 ICs == 1x74377, 3x74541
+// Uses 4 ICs == 1x74573, 3x74541
 
 module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
