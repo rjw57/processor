@@ -29,7 +29,7 @@ class Line(enum.IntFlag):
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
-    Bit15 = 1 << 15
+    Halt = 1 << 15
 
     # Stage 2
     LoadRegA = 1 << 16
@@ -47,7 +47,7 @@ class Line(enum.IntFlag):
     Bit28 = 1 << 28
     Bit29 = 1 << 29
     Bit30 = 1 << 30
-    Halt = 1 << 31
+    Bit31 = 1 << 31
 
     # Convenience for LHS assert
     AssertLHSRegA = 0 << 4
@@ -102,8 +102,8 @@ def control_lines(flags, opcode):
     if opcode == Opcode.NOP:
         return out
     elif opcode == Opcode.HALT:
-        # On halt, stop incrementing the PC.
-        out &= ~inc_pc_flag
+        # FIXME: halt still increments PC. Do we want halt to be in pipeline 1
+        # or 2?
         out |= Line.Halt
     elif opcode == Opcode.MOV_REGA_IMM:
         out |= (
