@@ -6,13 +6,12 @@
 module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   // Control lines
-  input CLK,              // Clock
-  input LOAD_bar,         // Load on next +ve clock
+  input LOAD,             // Load enable
   input ASSERT_MAIN_bar,  // Async assert to main bus
   input ASSERT_LHS_bar,   // Async assert to LHS bus
   input ASSERT_RHS_bar,   // Async assert to RHS bus
 
-  // Input dats
+  // Input data
   input [7:0] DATA_in,
 
   // Outputs
@@ -28,10 +27,10 @@ wire [7:0] value;
 
 assign display_value = value;
 
-ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
-  .Enable_bar (LOAD_bar),
+ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
+  .LE         (LOAD),
+  .OE_bar     (1'b0),
   .D          (DATA_in),
-  .Clk        (CLK),
   .Q          (value)
 );
 

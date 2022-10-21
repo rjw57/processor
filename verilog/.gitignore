@@ -1,2 +1,3 @@
 # Temporary memory created when assembling for execution
 execution.mem
+*.gtkw
