@@ -27,6 +27,7 @@
 //  | 4'b1000 | LHS ~>> 1  | 2'b11     | 2'b11         | 4'b0000   | 1'b0      |
 //  | 4'b1001 | LHS <<< 1  | 2'b10     | 2'b11         | 4'b0000   | 1'b0      |
 //  | 4'b1010 | LHS >>> 1  | 2'b11     | 2'b10         | 4'b0000   | 1'b0      |
+//  | 4'b1011 | Zero       | 2'b00     | 2'bXX         | 4'b0000   | 1'b0      |
 //
 // Note: '~>>' == arithmetic shift, '>>>' == rotate right, '<<<' == rotate left
 //
@@ -83,15 +84,15 @@ logicop #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) logicop(
 );
 
 // latches
-ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_reg(
-  .Enable_bar (1'b0),
+ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_reg(
+  .OE_bar     (1'b0),
   .D          (shiftop_out),
   .Clk        (CLK),
   .Q          (lhs_latch)
 );
 
-ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_reg(
-  .Enable_bar (1'b0),
+ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_reg(
+  .OE_bar     (1'b0),
   .D          (logicop_out),
   .Clk        (CLK),
   .Q          (rhs_latch)

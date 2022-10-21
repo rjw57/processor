@@ -34,21 +34,21 @@ ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
   .Q          (value)
 );
 
-ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_bus_out(
   .A            (value),
   .Enable1_bar  (ASSERT_MAIN_bar),
   .Enable2_bar  (1'b0),
   .Y            (MAIN_out)
 );
 
-ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_bus_out(
   .A            (value),
   .Enable1_bar  (ASSERT_LHS_bar),
   .Enable2_bar  (1'b0),
   .Y            (LHS_out)
 );
 
-ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_us_out(
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_bus_out(
   .A            (value),
   .Enable1_bar  (ASSERT_RHS_bar),
   .Enable2_bar  (1'b0),

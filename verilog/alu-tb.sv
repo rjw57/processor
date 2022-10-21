@@ -349,4 +349,30 @@ integer i, j;
       );
     end
   end
+
+  // Zero
+  OPCODE = 4'hB;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === 8'h00,
+        $sformatf(
+          "zero: got %0d",
+          RESULT
+        )
+      );
+    end
+  end
 `TBEND

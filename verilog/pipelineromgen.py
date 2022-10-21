@@ -7,6 +7,10 @@ from processor.encoding import Opcode
 ADDR_WIDTH = 15
 
 
+class Flags(enum.IntFlag):
+    FlagsBit0 = 1 << 0
+
+
 class Line(enum.IntFlag):
     # Stage 1
     IncrementPCRA0 = 1 << 0
@@ -34,7 +38,7 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit0 = 1 << 20
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
-    Bit23 = 1 << 23
+    LoadRegFlags = 1 << 23
     Bit24 = 1 << 24
     Bit25 = 1 << 25
     Bit26 = 1 << 26
@@ -68,6 +72,7 @@ class Line(enum.IntFlag):
     ALUOpcodeArithShiftRightLHS = 8 << 8
     ALUOpcodeRotateLeftLHS = 9 << 8
     ALUOpcodeRotateRightLHS = 10 << 8
+    ALUOpcodeZero = 11 << 8
 
     # Convenience for main bus assert device selection
     AssertMainRegConst = 1 << 20
@@ -93,7 +98,19 @@ def control_lines(flags, opcode):
     # Default to increment PC
     out = inc_pc_flag
 
-    if opcode == Opcode.HALT:
+#    # HACK: Special reset behaviour: initialise registers A, B, C and D from ALU's
+#    # zero output while loading the flags register. We need to keep asserting
+#    # the inc_pc_flag so that instruction fetch continues after reset.
+#    if (flags & Flags.ResetBar) == 0:
+#        out |= (
+#            Line.LoadRegA | Line.LoadRegB | Line.LoadRegC | Line.LoadRegD |
+#            Line.ALUOpcodeZero | Line.AssertMainALUResult | Line.LoadRegFlags
+#        )
+#        return out
+
+    if opcode == Opcode.NOP:
+        return out
+    elif opcode == Opcode.HALT:
         # On halt, stop incrementing the PC.
         out &= ~inc_pc_flag
         out |= Line.Halt

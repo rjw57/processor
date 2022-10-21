@@ -36,9 +36,11 @@ wire ctrl_load_reg_b;
 wire ctrl_load_reg_c;
 wire ctrl_load_reg_d;
 wire [2:0] ctrl_main_bus_assert_index;
+wire ctrl_load_reg_flags;
 wire ctrl_halt;
 
 // Pipeline stages
+wire [6:0] pipeline_flags;
 wire [7:0] next_instruction;
 wire [7:0] pipeline_1_out;
 wire [15:0] pipeline_1_control_out;
@@ -50,7 +52,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-1b.mem")
 ) pipeline_1 (
   .CLK(CLK),
-  .FLAGS(7'b0),
+  .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(next_instruction),
   .NEXT_STAGE_OUT(pipeline_1_out),
   .CONTROL_OUT(pipeline_1_control_out)
@@ -66,7 +68,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-2b.mem")
 ) pipeline_2 (
   .CLK(CLK),
-  .FLAGS(7'b0),
+  .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(pipeline_1_out),
   .NEXT_STAGE_OUT(pipeline_2_out),
   .CONTROL_OUT(pipeline_2_control_out)
@@ -87,6 +89,7 @@ assign ctrl_load_reg_b = pipeline_2_control_out[1];
 assign ctrl_load_reg_c = pipeline_2_control_out[2];
 assign ctrl_load_reg_d = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
+assign ctrl_load_reg_flags = pipeline_2_control_out[7];
 assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
@@ -187,6 +190,20 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .RESULT(alu_result),
   .CARRY_OUT(alu_carry_out)
 );
+
+// Flags register
+wire [7:0] reg_flags_in = {7'b0, alu_carry_out};
+wire [7:0] reg_flags_out;
+ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
+  .LE(ctrl_load_reg_flags),
+  .OE_bar(1'b0),
+  .D(reg_flags_in),
+  .Q(reg_flags_out)
+);
+
+// TODO: we can't enable this until we have consistent reset behaviour
+//assign pipeline_flags = {reg_flags_out[5:0], RST_bar};
+assign pipeline_flags = 7'b0;
 
 assign alu_carry_in = 1'b0; // TODO
 assign alu_opcode = ctrl_alu_opcode;
