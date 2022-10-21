@@ -105,6 +105,15 @@ def control_lines(flags, opcode):
     # Default to increment PC
     out = inc_pc_flag
 
+    # is the carry flag set
+    is_carry = (flags & Flags.Carry) != 0
+
+    # how would we set the ALU's carry in to match the current carry flag?
+    if is_carry:
+        set_input_carry = Line.ALUCarryIn
+    else:
+        set_input_carry = 0
+
     if opcode == Opcode.NOP:
         return out
     elif opcode == Opcode.HALT:
@@ -281,6 +290,66 @@ def control_lines(flags, opcode):
     elif opcode == Opcode.SUB_REGD_REGC:
         out |= (
             Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGA_REGB:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegB | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGA_REGC:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegC | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGA_REGD:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegD | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGB_REGA:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegA | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGB_REGC:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegC | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGB_REGD:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegD | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGC_REGA:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegA | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGC_REGB:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegB | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGC_REGD:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegD | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGD_REGA:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegA | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGD_REGB:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegB | Line.ALUOpcodeAdd | set_input_carry |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.ADDC_REGD_REGC:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeAdd | set_input_carry |
             Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
         )
 

@@ -29,4 +29,20 @@ entry:
   sub d, a // should == 0xdf
   sub d, b // should == 0xc7
   add d, c // should == 0xd7
+
+  // check add with carry to compute 0x10f8 + 0x2123 == 0x321b
+  mov a, 0xf8
+  mov b, 0x10
+  mov c, 0x23
+  mov d, 0x21
+  add c, a
+  addc d, b   // {d, c} should now be {0x32, 0x1b}
+
+  // check add with carry to compute 0x3032 + 0x2123 == 0x5155
+  mov a, 0x32
+  mov b, 0x30
+  mov c, 0x23
+  mov d, 0x21
+  add c, a
+  addc d, b   // {d, c} should now be {0x51, 0x55}
   halt
