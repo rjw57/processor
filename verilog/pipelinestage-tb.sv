@@ -3,6 +3,7 @@
 `TBPROLOGUE
 
 reg [6:0] FLAGS;
+reg CANCEL;
 reg [7:0] PREV_STAGE_IN;
 wire [7:0] NEXT_STAGE_OUT;
 wire [15:0] CONTROL_OUT;
@@ -15,6 +16,7 @@ pipelinestage #(
   .B_CONTENTS("../roms/popcount.mem")
 ) dut (
   .CLK(CLK),
+  .CANCEL(CANCEL),
   .FLAGS(FLAGS),
   .PREV_STAGE_IN(PREV_STAGE_IN),
   .NEXT_STAGE_OUT(NEXT_STAGE_OUT),
@@ -22,6 +24,7 @@ pipelinestage #(
 );
 
 `TBBEGIN
+  CANCEL = 1'b0;
   PREV_STAGE_IN = 8'hab;
   FLAGS = 7'b0;
 

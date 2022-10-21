@@ -35,6 +35,7 @@ wire [2:0] ctrl_main_bus_assert_index;
 wire ctrl_load_reg_flags;
 wire ctrl_inc_pcra0;
 wire ctrl_inc_pcra1;
+wire ctrl_pipeline_cancel;
 wire ctrl_halt;
 
 // Pipeline stages
@@ -50,6 +51,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-1b.mem")
 ) pipeline_1 (
   .CLK(CLK),
+  .CANCEL(ctrl_pipeline_cancel),
   .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(next_instruction),
   .NEXT_STAGE_OUT(pipeline_1_out),
@@ -66,6 +68,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-2b.mem")
 ) pipeline_2 (
   .CLK(CLK),
+  .CANCEL(ctrl_pipeline_cancel),
   .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(pipeline_1_out),
   .NEXT_STAGE_OUT(pipeline_2_out),
@@ -87,6 +90,9 @@ assign ctrl_load_reg_flags = pipeline_2_control_out[7];
 assign ctrl_inc_pcra0 = pipeline_2_control_out[8];
 assign ctrl_inc_pcra1 = pipeline_2_control_out[9];
 assign ctrl_halt = pipeline_2_control_out[15];
+
+// HACK
+assign ctrl_pipeline_cancel = 1'b0;
 
 // Instruction dispatch.
 //

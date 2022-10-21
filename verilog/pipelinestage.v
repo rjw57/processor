@@ -13,6 +13,7 @@ module pipelinestage
 )
 (
   input CLK,
+  input CANCEL, // bring high to set NEXT_STAGE_OUT to NOP
   input [ADDR_WIDTH-9:0] FLAGS,
   input [7:0] PREV_STAGE_IN,
   output [7:0] NEXT_STAGE_OUT,
@@ -25,11 +26,13 @@ wire [ADDR_WIDTH-9:0] flags = FLAGS;
 wire [7:0] rom_a_out;
 wire [7:0] rom_b_out;
 
-assign NEXT_STAGE_OUT = opcode_next;
+// in hardware we're implement this by a pull-down resistor network since the
+// latch will go high-Z
+assign NEXT_STAGE_OUT = CANCEL ? 8'h00 : opcode_next;
 
 // opcode latch
 ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) opcode_latch(
-  .Enable_bar (1'b0),
+  .Enable_bar (CANCEL),
   .D          (opcode),
   .Clk        (CLK),
   .Q          (opcode_next)
