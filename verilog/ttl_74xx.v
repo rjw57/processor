@@ -43,6 +43,7 @@
 `include "../lib/ice-chips-verilog/source-7400/74377.v"
 
 // Custom 7400 series modules we include in our tree
+`include "../lib/custom-7400/ttl_74193.v"
 `include "../lib/custom-7400/ttl_74541.v"
 `include "../lib/custom-7400/ttl_74573.v"
 `include "../lib/custom-7400/ttl_74574.v"
