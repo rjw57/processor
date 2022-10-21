@@ -3,7 +3,7 @@
 
 `TBPROLOGUE
 
-reg LOAD, CLEAR_bar, ASSERT_MAIN_bar, ASSERT_LHS_bar, ASSERT_RHS_bar;
+reg LOAD, ASSERT_MAIN_bar, ASSERT_LHS_bar, ASSERT_RHS_bar;
 reg [7:0] DATA_in;
 wire [7:0] MAIN_out;
 wire [7:0] LHS_out;
@@ -14,7 +14,6 @@ wire [7:0] display_value;
 // Device under test.
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) dut(
   .LOAD(LOAD),
-  .CLEAR_bar(CLEAR_bar),
   .ASSERT_MAIN_bar(ASSERT_MAIN_bar),
   .ASSERT_LHS_bar(ASSERT_LHS_bar),
   .ASSERT_RHS_bar(ASSERT_RHS_bar),
@@ -28,7 +27,6 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) dut(
 `TBBEGIN
   // Initial signal values
   LOAD = 1'b1;
-  CLEAR_bar = 1'b1;
   ASSERT_MAIN_bar = 1'b1;
   ASSERT_LHS_bar = 1'b1;
   ASSERT_RHS_bar = 1'b1;

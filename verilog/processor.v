@@ -32,6 +32,7 @@ wire [3:0] ctrl_alu_opcode;
 
 // Control lines - stage 2
 wire [2:0] ctrl_main_bus_load_index;
+wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
 wire ctrl_load_reg_flags;
 wire ctrl_halt;
@@ -83,6 +84,7 @@ assign ctrl_halt = pipeline_1_control_out[15];
 
 // Pipeline stage 2 control lines
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
+assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
 assign ctrl_load_reg_flags = pipeline_2_control_out[7];
 
@@ -117,12 +119,12 @@ memory #(
 );
 
 // Main bus load device index. We use the clock as an enable to ensure that
-// there is a -ve going edge of the load line synchronised with the -ve going
-// clock pulse so that the register values have been latched by the end of the
-// cycle.
+// the -ve going edge of the load line happens mid cycle. This is to ensure the
+// register value is stable for subsequent cycles to latch the values. Without
+// this single cycle reuse of registers, e.g. a train of add a, ... instructoins,
+// would use old versions of the a register.
 //
-// FIXME: this sort of "half clock cycle" magic has a bit of a smell about it :
-// (.
+// FIXME: this sort of "half clock cycle" magic has a bit of a smell about it :(
 //
 // 0 == no device
 // 1 == A reg
@@ -230,7 +232,7 @@ ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
 // have consistent reset behaviour
 assign pipeline_flags = reg_flags_out[6:0];
 
-assign alu_carry_in = 1'b0; // TODO
+assign alu_carry_in = ctrl_alu_carry_in;
 assign alu_opcode = ctrl_alu_opcode;
 
 // Program counter register
@@ -255,7 +257,6 @@ wire reg_a_assert_lhs_bar;
 wire reg_a_assert_rhs_bar;
 wire reg_a_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
-  .CLEAR_bar(RST_bar),
   .LOAD(reg_a_load),
 
   .ASSERT_MAIN_bar(reg_a_assert_main_bar),
@@ -283,7 +284,6 @@ wire reg_b_assert_lhs_bar;
 wire reg_b_assert_rhs_bar;
 wire reg_b_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
-  .CLEAR_bar(RST_bar),
   .LOAD(reg_b_load),
 
   .ASSERT_MAIN_bar(reg_b_assert_main_bar),
@@ -311,7 +311,6 @@ wire reg_c_assert_lhs_bar;
 wire reg_c_assert_rhs_bar;
 wire reg_c_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
-  .CLEAR_bar(RST_bar),
   .LOAD(reg_c_load),
 
   .ASSERT_MAIN_bar(reg_c_assert_main_bar),
@@ -339,7 +338,6 @@ wire reg_d_assert_lhs_bar;
 wire reg_d_assert_rhs_bar;
 wire reg_d_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
-  .CLEAR_bar(RST_bar),
   .LOAD(reg_d_load),
 
   .ASSERT_MAIN_bar(reg_d_assert_main_bar),

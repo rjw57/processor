@@ -35,7 +35,7 @@ class Line(enum.IntFlag):
     LoadMainDeviceBit0 = 1 << 16
     LoadMainDeviceBit1 = 1 << 17
     LoadMainDeviceBit2 = 1 << 18
-    Bit19 = 1 << 19
+    ALUCarryIn = 1 << 19
     AssertMainDeviceBit0 = 1 << 20
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
@@ -221,6 +221,66 @@ def control_lines(flags, opcode):
     elif opcode == Opcode.ADD_REGD_REGC:
         out |= (
             Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeAdd |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGA_REGB:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegB | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGA_REGC:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegC | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGA_REGD:
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegD | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegA | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGB_REGA:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegA | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGB_REGC:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegC | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGB_REGD:
+        out |= (
+            Line.AssertLHSRegB | Line.AssertRHSRegD | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegB | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGC_REGA:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegA | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGC_REGB:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegB | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGC_REGD:
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegD | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegC | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGD_REGA:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegA | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGD_REGB:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegB | Line.ALUOpcodeSub | Line.ALUCarryIn |
+            Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
+        )
+    elif opcode == Opcode.SUB_REGD_REGC:
+        out |= (
+            Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeSub | Line.ALUCarryIn |
             Line.LoadRegD | Line.AssertMainALUResult | Line.LoadRegFlags
         )
 

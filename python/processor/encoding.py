@@ -38,6 +38,19 @@ class Encoding(enum.Enum):
     ADD_REGD_REGB       = [0x7a]
     ADD_REGD_REGC       = [0x7b]
 
+    SUB_REGA_REGB       = [0x80]
+    SUB_REGA_REGC       = [0x81]
+    SUB_REGA_REGD       = [0x82]
+    SUB_REGB_REGA       = [0x83]
+    SUB_REGB_REGC       = [0x84]
+    SUB_REGB_REGD       = [0x85]
+    SUB_REGC_REGA       = [0x86]
+    SUB_REGC_REGB       = [0x87]
+    SUB_REGC_REGD       = [0x88]
+    SUB_REGD_REGA       = [0x89]
+    SUB_REGD_REGB       = [0x8a]
+    SUB_REGD_REGC       = [0x8b]
+
 
 # Generate an IntEnum of opcode values from the first value in the instruction
 # encoding.

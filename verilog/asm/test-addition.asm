@@ -24,4 +24,9 @@ entry:
   add d, b // should == 0xac
   add d, a // should == 0xdf
   add d, a // should == 0x12 with carry
+
+  // we now check the ALU ops are being set on the right cycles by changing ops
+  sub d, a // should == 0xdf
+  sub d, b // should == 0xc7
+  add d, c // should == 0xd7
   halt
