@@ -191,19 +191,26 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .CARRY_OUT(alu_carry_out)
 );
 
-// Flags register
-wire [7:0] reg_flags_in = {7'b0, alu_carry_out};
+// ALU flags register: TODO can we implement RST behaviour easily in logic? Does
+// it matter in real hardware if the flags register starts in an unknown state?
+// Initialise to all 1s on reset so we don't bake in assumptions that it will be
+// zero on start in real hardware.
+wire [7:0] reg_flags_in = {
+  6'b0,
+  alu_result[7],    // negative == sign bit of result
+  alu_carry_out     // carry
+};
 wire [7:0] reg_flags_out;
 ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
-  .LE(ctrl_load_reg_flags),
+  .LE(!RST_bar | ctrl_load_reg_flags),
   .OE_bar(1'b0),
-  .D(reg_flags_in),
+  .D(RST_bar ? reg_flags_in : 8'hff),
   .Q(reg_flags_out)
 );
 
-// TODO: we can't enable this until we have consistent reset behaviour
-//assign pipeline_flags = {reg_flags_out[5:0], RST_bar};
-assign pipeline_flags = 7'b0;
+// Note: this feedback into the pipelines stage is why it is important that we
+// have consistent reset behaviour
+assign pipeline_flags = reg_flags_out[6:0];
 
 assign alu_carry_in = 1'b0; // TODO
 assign alu_opcode = ctrl_alu_opcode;
