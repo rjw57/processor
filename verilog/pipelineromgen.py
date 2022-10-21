@@ -39,9 +39,9 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit0 = 1 << 20
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
-    Bit23 = 1 << 23
-    IncrementPCRA0 = 1 << 24
-    IncrementPCRA1 = 1 << 25
+    IncrementPCRA0 = 1 << 23
+    IncrementPCRA1 = 1 << 24
+    Bit25 = 1 << 25
     Bit26 = 1 << 26
     Bit27 = 1 << 27
     Bit28 = 1 << 28

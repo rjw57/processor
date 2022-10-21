@@ -102,8 +102,8 @@ assign ctrl_alu_opcode = pipeline_1_control_out[9:6];
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
 assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
-assign ctrl_inc_pcra0 = pipeline_2_control_out[8];
-assign ctrl_inc_pcra1 = pipeline_2_control_out[9];
+assign ctrl_inc_pcra0 = pipeline_2_control_out[7];
+assign ctrl_inc_pcra1 = pipeline_2_control_out[8];
 assign ctrl_halt = pipeline_2_control_out[15];
 
 // HACK
