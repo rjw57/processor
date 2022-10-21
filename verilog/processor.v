@@ -22,8 +22,6 @@ wire [7:0] rhs_bus;
 wire [7:0] main_bus;
 
 // Control lines - stage 1
-wire ctrl_inc_pcra0;
-wire ctrl_inc_pcra1;
 wire ctrl_instr_dispatch_bar;
 wire ctrl_load_reg_const;
 wire [1:0] ctrl_lhs_bus_assert_index;
@@ -35,6 +33,8 @@ wire [2:0] ctrl_main_bus_load_index;
 wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
 wire ctrl_load_reg_flags;
+wire ctrl_inc_pcra0;
+wire ctrl_inc_pcra1;
 wire ctrl_halt;
 
 // Pipeline stages
@@ -73,20 +73,20 @@ pipelinestage #(
 );
 
 // Pipeline stage 1 control lines
-assign ctrl_inc_pcra0 = pipeline_1_control_out[0];
-assign ctrl_inc_pcra1 = pipeline_1_control_out[1];
 assign ctrl_instr_dispatch_bar = pipeline_1_control_out[2];
 assign ctrl_load_reg_const = pipeline_1_control_out[3];
 assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[5:4];
 assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[7:6];
 assign ctrl_alu_opcode = pipeline_1_control_out[11:8];
-assign ctrl_halt = pipeline_1_control_out[15];
 
 // Pipeline stage 2 control lines
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
 assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
 assign ctrl_load_reg_flags = pipeline_2_control_out[7];
+assign ctrl_inc_pcra0 = pipeline_2_control_out[8];
+assign ctrl_inc_pcra1 = pipeline_2_control_out[9];
+assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
 //

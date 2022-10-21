@@ -14,8 +14,8 @@ class Flags(enum.IntFlag):
 
 class Line(enum.IntFlag):
     # Stage 1
-    IncrementPCRA0 = 1 << 0
-    IncrementPCRA1 = 1 << 1
+    Bit0 = 1 << 0
+    Bit1 = 1 << 1
     InstrDispatchBar = 1 << 2
     LoadRegConst = 1 << 3
     AssertLHSDeviceBit0 = 1 << 4
@@ -29,7 +29,7 @@ class Line(enum.IntFlag):
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
-    Halt = 1 << 15
+    Bit15 = 1 << 15
 
     # Stage 2
     LoadMainDeviceBit0 = 1 << 16
@@ -40,14 +40,14 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
     LoadRegFlags = 1 << 23
-    Bit24 = 1 << 24
-    Bit25 = 1 << 25
+    IncrementPCRA0 = 1 << 24
+    IncrementPCRA1 = 1 << 25
     Bit26 = 1 << 26
     Bit27 = 1 << 27
     Bit28 = 1 << 28
     Bit29 = 1 << 29
     Bit30 = 1 << 30
-    Bit31 = 1 << 31
+    Halt = 1 << 31
 
     # Convenience for LHS assert
     AssertLHSRegA = 0 << 4
@@ -115,11 +115,13 @@ def control_lines(flags, opcode):
         set_input_carry = 0
 
     if opcode == Opcode.NOP:
-        return out
+        # nothing
+        pass
     elif opcode == Opcode.HALT:
-        # FIXME: halt still increments PC. Do we want halt to be in pipeline 1
-        # or 2?
+        # FIXME: halt still increments PC. We need some sort
+        # of pipeline stall support
         out |= Line.Halt
+        out &= ~inc_pc_flag
     elif opcode == Opcode.MOV_REGA_IMM:
         out |= (
             Line.InstrDispatchBar
