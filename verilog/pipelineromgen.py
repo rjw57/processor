@@ -22,10 +22,10 @@ class Line(enum.IntFlag):
     AssertLHSDeviceBit1 = 1 << 5
     AssertRHSDeviceBit0 = 1 << 6
     AssertRHSDeviceBit1 = 1 << 7
-    ALUOpcodeBit0 = 1 << 8
-    ALUOpcodeBit1 = 1 << 9
-    ALUOpcodeBit2 = 1 << 10
-    ALUOpcodeBit3 = 1 << 11
+    Bit8 = 1 << 8
+    Bit9 = 1 << 9
+    Bit10 = 1 << 10
+    Bit11 = 1 << 11
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
@@ -40,10 +40,10 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
     LoadRegFlags = 1 << 23
-    Bit24 = 1 << 24
-    Bit25 = 1 << 25
-    Bit26 = 1 << 26
-    Bit27 = 1 << 27
+    ALUOpcodeBit0 = 1 << 24
+    ALUOpcodeBit1 = 1 << 25
+    ALUOpcodeBit2 = 1 << 26
+    ALUOpcodeBit3 = 1 << 27
     Bit28 = 1 << 28
     Bit29 = 1 << 29
     Bit30 = 1 << 30
@@ -62,18 +62,18 @@ class Line(enum.IntFlag):
     AssertRHSRegD = 3 << 6
 
     # Convenience for ALU opcode
-    ALUOpcodeAdd = 0 << 8
-    ALUOpcodeSub = 1 << 8
-    ALUOpcodeBitAnd = 2 << 8
-    ALUOpcodeBitOr = 3 << 8
-    ALUOpcodeBitXor = 4 << 8
-    ALUOpcodeNotRHS = 5 << 8
-    ALUOpcodeLogicalShiftLeftLHS = 6 << 8
-    ALUOpcodeLogicalShiftRightLHS = 7 << 8
-    ALUOpcodeArithShiftRightLHS = 8 << 8
-    ALUOpcodeRotateLeftLHS = 9 << 8
-    ALUOpcodeRotateRightLHS = 10 << 8
-    ALUOpcodeZero = 11 << 8
+    ALUOpcodeAdd = 0 << 24
+    ALUOpcodeSub = 1 << 24
+    ALUOpcodeBitAnd = 2 << 24
+    ALUOpcodeBitOr = 3 << 24
+    ALUOpcodeBitXor = 4 << 24
+    ALUOpcodeNotRHS = 5 << 24
+    ALUOpcodeLogicalShiftLeftLHS = 6 << 24
+    ALUOpcodeLogicalShiftRightLHS = 7 << 24
+    ALUOpcodeArithShiftRightLHS = 8 << 24
+    ALUOpcodeRotateLeftLHS = 9 << 24
+    ALUOpcodeRotateRightLHS = 10 << 24
+    ALUOpcodeZero = 11 << 24
 
     # Convenience for main bus assert device selection
     AssertMainRegConst = 1 << 20
