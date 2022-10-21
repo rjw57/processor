@@ -30,7 +30,8 @@
 //
 // Note: '~>>' == arithmetic shift, '>>>' == rotate right, '<<<' == rotate left
 //
-module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) ( input CLK,
+module alu #(parameter DELAY_RISE = 0, DELAY_FALL = 0) (
+  input CLK,
 
   // input
   input [7:0] LHS,

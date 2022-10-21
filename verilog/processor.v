@@ -24,9 +24,11 @@ wire [7:0] main_bus;
 // Control lines - stage 1
 wire ctrl_inc_pcra0;
 wire ctrl_inc_pcra1;
-wire ctrl_halt;
 wire ctrl_instr_dispatch_bar;
 wire ctrl_load_reg_const;
+wire [1:0] ctrl_lhs_bus_assert_index;
+wire [1:0] ctrl_rhs_bus_assert_index;
+wire [3:0] ctrl_alu_opcode;
 
 // Control lines - stage 2
 wire ctrl_load_reg_a;
@@ -34,6 +36,7 @@ wire ctrl_load_reg_b;
 wire ctrl_load_reg_c;
 wire ctrl_load_reg_d;
 wire [2:0] ctrl_main_bus_assert_index;
+wire ctrl_halt;
 
 // Pipeline stages
 wire [7:0] next_instruction;
@@ -72,10 +75,11 @@ pipelinestage #(
 // Pipeline stage 1 control lines
 assign ctrl_inc_pcra0 = pipeline_1_control_out[0];
 assign ctrl_inc_pcra1 = pipeline_1_control_out[1];
-assign ctrl_halt = pipeline_1_control_out[2];
-assign ctrl_instr_dispatch_bar = pipeline_1_control_out[3];
-assign ctrl_instr_dispatch_bar = pipeline_1_control_out[3];
-assign ctrl_load_reg_const = pipeline_1_control_out[4];
+assign ctrl_instr_dispatch_bar = pipeline_1_control_out[2];
+assign ctrl_load_reg_const = pipeline_1_control_out[3];
+assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[5:4];
+assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[7:6];
+assign ctrl_alu_opcode = pipeline_1_control_out[11:8];
 
 // Pipeline stage 2 control lines
 assign ctrl_load_reg_a = pipeline_2_control_out[0];
@@ -83,6 +87,7 @@ assign ctrl_load_reg_b = pipeline_2_control_out[1];
 assign ctrl_load_reg_c = pipeline_2_control_out[2];
 assign ctrl_load_reg_d = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
+assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
 //
@@ -124,7 +129,7 @@ memory #(
 // 5 == D reg
 wire [2:0] main_bus_assert_index;
 wire [7:0] main_bus_assert_enable_bar;
-ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) assert_device_decode (
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_assert_index_decode (
   .Enable1_bar(1'b0),
   .Enable2_bar(1'b0),
   .Enable3(1'b1),
@@ -133,9 +138,58 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) assert_device_deco
 );
 assign main_bus_assert_index = ctrl_main_bus_assert_index;
 
-// TODO: LHS and RHS
-wire [7:0] lhs_bus_assert_enable_bar = 8'hFF;
-wire [7:0] rhs_bus_assert_enable_bar = 8'hFF;
+// LHS bus assert device index:
+//
+// 0 == A reg
+// 1 == B reg
+// 2 == C reg
+// 3 == D reg
+wire [2:0] lhs_bus_assert_index;
+wire [7:0] lhs_bus_assert_enable_bar;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_assert_index_decodd (
+  .Enable1_bar(1'b0),
+  .Enable2_bar(1'b0),
+  .Enable3(1'b1),
+  .A(lhs_bus_assert_index),
+  .Y(lhs_bus_assert_enable_bar)
+);
+assign lhs_bus_assert_index = {1'b0, ctrl_lhs_bus_assert_index};
+
+// RHS bus assert device index:
+//
+// 0 == A reg
+// 1 == B reg
+// 2 == C reg
+// 3 == D reg
+wire [2:0] rhs_bus_assert_index;
+wire [7:0] rhs_bus_assert_enable_bar;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert_index_decodd (
+  .Enable1_bar(1'b0),
+  .Enable2_bar(1'b0),
+  .Enable3(1'b1),
+  .A(rhs_bus_assert_index),
+  .Y(rhs_bus_assert_enable_bar)
+);
+assign rhs_bus_assert_index = {1'b0, ctrl_rhs_bus_assert_index};
+
+// ALU - main bus device 5
+wire [3:0] alu_opcode;
+wire alu_carry_in;
+wire [7:0] alu_result;
+wire alu_carry_out;
+
+alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
+  .CLK(CLK),
+  .LHS(lhs_bus),
+  .RHS(rhs_bus),
+  .OPCODE(alu_opcode),
+  .CARRY_IN(alu_carry_in),
+  .RESULT(alu_result),
+  .CARRY_OUT(alu_carry_out)
+);
+
+assign alu_carry_in = 1'b0; // TODO
+assign alu_opcode = ctrl_alu_opcode;
 
 // Program counter register
 wire [15:0] reg_pc_out;
@@ -172,10 +226,10 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
   .RHS_out(reg_a_rhs_out)
 );
 
-// Device 2 on main bus. Device 1 on LHS/RHS buses.
+// Device 2 on main bus. Device 0 on LHS/RHS buses.
 assign reg_a_assert_main_bar = main_bus_assert_enable_bar[2];
-assign reg_a_assert_lhs_bar = lhs_bus_assert_enable_bar[1];
-assign reg_a_assert_rhs_bar = rhs_bus_assert_enable_bar[1];
+assign reg_a_assert_lhs_bar = lhs_bus_assert_enable_bar[0];
+assign reg_a_assert_rhs_bar = rhs_bus_assert_enable_bar[0];
 assign reg_a_load = ctrl_load_reg_a;
 
 wire [7:0] reg_b_main_out;
@@ -199,10 +253,10 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
   .RHS_out(reg_b_rhs_out)
 );
 
-// Device 3 on main bus. Device 2 on LHS/RHS buses.
+// Device 3 on main bus. Device 1 on LHS/RHS buses.
 assign reg_b_assert_main_bar = main_bus_assert_enable_bar[3];
-assign reg_b_assert_lhs_bar = lhs_bus_assert_enable_bar[2];
-assign reg_b_assert_rhs_bar = rhs_bus_assert_enable_bar[2];
+assign reg_b_assert_lhs_bar = lhs_bus_assert_enable_bar[1];
+assign reg_b_assert_rhs_bar = rhs_bus_assert_enable_bar[1];
 assign reg_b_load = ctrl_load_reg_b;
 
 wire [7:0] reg_c_main_out;
@@ -226,10 +280,10 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
   .RHS_out(reg_c_rhs_out)
 );
 
-// Device 4 on main bus. Device 3 on LHS/RHS buses.
+// Device 4 on main bus. Device 2 on LHS/RHS buses.
 assign reg_c_assert_main_bar = main_bus_assert_enable_bar[4];
-assign reg_c_assert_lhs_bar = lhs_bus_assert_enable_bar[3];
-assign reg_c_assert_rhs_bar = rhs_bus_assert_enable_bar[3];
+assign reg_c_assert_lhs_bar = lhs_bus_assert_enable_bar[2];
+assign reg_c_assert_rhs_bar = rhs_bus_assert_enable_bar[2];
 assign reg_c_load = ctrl_load_reg_c;
 
 wire [7:0] reg_d_main_out;
@@ -253,10 +307,10 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
   .RHS_out(reg_d_rhs_out)
 );
 
-// Device 5 on main bus. Device 4 on LHS/RHS buses.
+// Device 5 on main bus. Device 3 on LHS/RHS buses.
 assign reg_d_assert_main_bar = main_bus_assert_enable_bar[5];
-assign reg_d_assert_lhs_bar = lhs_bus_assert_enable_bar[4];
-assign reg_d_assert_rhs_bar = rhs_bus_assert_enable_bar[4];
+assign reg_d_assert_lhs_bar = lhs_bus_assert_enable_bar[3];
+assign reg_d_assert_rhs_bar = rhs_bus_assert_enable_bar[3];
 assign reg_d_load = ctrl_load_reg_d;
 
 // Constant register. Like a general purpose register except the LHS/RHS buses
@@ -298,13 +352,32 @@ assign mem_data_bus_stages[1] = memory_assert_bar ? mem_data_bus_stages[0] : mem
 assign mem_data_bus = mem_data_bus_stages[1];
 
 // Main bus
-wire [7:0] main_bus_stages [0:5];
+wire [7:0] main_bus_stages [0:6];
 assign main_bus_stages[0] = 8'bZ;
 assign main_bus_stages[1] = main_bus_assert_enable_bar[1] ? main_bus_stages[0] : reg_const_main_out;
 assign main_bus_stages[2] = main_bus_assert_enable_bar[2] ? main_bus_stages[1] : reg_a_main_out;
 assign main_bus_stages[3] = main_bus_assert_enable_bar[3] ? main_bus_stages[2] : reg_b_main_out;
 assign main_bus_stages[4] = main_bus_assert_enable_bar[4] ? main_bus_stages[3] : reg_c_main_out;
 assign main_bus_stages[5] = main_bus_assert_enable_bar[5] ? main_bus_stages[4] : reg_d_main_out;
-assign main_bus = main_bus_stages[5];
+assign main_bus_stages[6] = main_bus_assert_enable_bar[6] ? main_bus_stages[5] : alu_result;
+assign main_bus = main_bus_stages[6];
+
+// LHS bus
+wire [7:0] lhs_bus_stages [0:4];
+assign lhs_bus_stages[0] = 8'bZ;
+assign lhs_bus_stages[1] = lhs_bus_assert_enable_bar[0] ? lhs_bus_stages[0] : reg_a_lhs_out;
+assign lhs_bus_stages[2] = lhs_bus_assert_enable_bar[1] ? lhs_bus_stages[1] : reg_b_lhs_out;
+assign lhs_bus_stages[3] = lhs_bus_assert_enable_bar[2] ? lhs_bus_stages[2] : reg_c_lhs_out;
+assign lhs_bus_stages[4] = lhs_bus_assert_enable_bar[3] ? lhs_bus_stages[3] : reg_d_lhs_out;
+assign lhs_bus = lhs_bus_stages[4];
+
+// RHS bus
+wire [7:0] rhs_bus_stages [0:4];
+assign rhs_bus_stages[0] = 8'bZ;
+assign rhs_bus_stages[1] = rhs_bus_assert_enable_bar[0] ? rhs_bus_stages[0] : reg_a_rhs_out;
+assign rhs_bus_stages[2] = rhs_bus_assert_enable_bar[1] ? rhs_bus_stages[1] : reg_b_rhs_out;
+assign rhs_bus_stages[3] = rhs_bus_assert_enable_bar[2] ? rhs_bus_stages[2] : reg_c_rhs_out;
+assign rhs_bus_stages[4] = rhs_bus_assert_enable_bar[3] ? rhs_bus_stages[3] : reg_d_rhs_out;
+assign rhs_bus = rhs_bus_stages[4];
 
 endmodule
