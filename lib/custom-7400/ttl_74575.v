@@ -18,7 +18,7 @@ begin
 end
 //------------------------------------------------//
 
-assign #(DELAY_RISE, DELAY_FALL) Q = Q_current;
+assign #(DELAY_RISE, DELAY_FALL) Q = OE_bar ? {(WIDTH){1'bZ}} : Q_current;
 
 endmodule
 

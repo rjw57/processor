@@ -1,12 +1,13 @@
 // 8-bit general purpose register with synchronous load and asynchronous assert.
 //
 //
-// Uses 4 ICs == 1x74573, 3x74541
+// Uses 4 ICs == 1x74575, 3x74541
 
 module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   // Control lines
-  input LOAD,             // Load enable
+  input LOAD,             // Load on -ve going edge
+  input CLEAR_bar,        // Synchronous clear
   input ASSERT_MAIN_bar,  // Async assert to main bus
   input ASSERT_LHS_bar,   // Async assert to LHS bus
   input ASSERT_RHS_bar,   // Async assert to RHS bus
@@ -26,9 +27,12 @@ module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 wire [7:0] value;
 
 assign display_value = value;
+wire load_clk;
+assign #(DELAY_RISE, DELAY_FALL) load_clk = !LOAD; // FIXME: could we remove the inverter?
 
-ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
-  .LE         (LOAD),
+ttl_74575 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) register(
+  .Clear_bar  (CLEAR_bar),
+  .Clk        (load_clk),
   .OE_bar     (1'b0),
   .D          (DATA_in),
   .Q          (value)

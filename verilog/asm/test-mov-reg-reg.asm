@@ -22,4 +22,5 @@ entry:
   mov d, a
   mov d, b
   mov d, c
+  mov a, d
   halt

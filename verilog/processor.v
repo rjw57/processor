@@ -31,10 +31,7 @@ wire [1:0] ctrl_rhs_bus_assert_index;
 wire [3:0] ctrl_alu_opcode;
 
 // Control lines - stage 2
-wire ctrl_load_reg_a;
-wire ctrl_load_reg_b;
-wire ctrl_load_reg_c;
-wire ctrl_load_reg_d;
+wire [2:0] ctrl_main_bus_load_index;
 wire [2:0] ctrl_main_bus_assert_index;
 wire ctrl_load_reg_flags;
 wire ctrl_halt;
@@ -85,10 +82,7 @@ assign ctrl_alu_opcode = pipeline_1_control_out[11:8];
 assign ctrl_halt = pipeline_1_control_out[15];
 
 // Pipeline stage 2 control lines
-assign ctrl_load_reg_a = pipeline_2_control_out[0];
-assign ctrl_load_reg_b = pipeline_2_control_out[1];
-assign ctrl_load_reg_c = pipeline_2_control_out[2];
-assign ctrl_load_reg_d = pipeline_2_control_out[3];
+assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
 assign ctrl_load_reg_flags = pipeline_2_control_out[7];
 
@@ -121,6 +115,30 @@ memory #(
   .OE_bar(memory_assert_bar),
   .DATA_OUT(memory_data_out)
 );
+
+// Main bus load device index. We use the clock as an enable to ensure that
+// there is a -ve going edge of the load line synchronised with the -ve going
+// clock pulse so that the register values have been latched by the end of the
+// cycle.
+//
+// FIXME: this sort of "half clock cycle" magic has a bit of a smell about it :
+// (.
+//
+// 0 == no device
+// 1 == A reg
+// 2 == B reg
+// 3 == C reg
+// 4 == D reg
+wire [2:0] main_bus_load_index;
+wire [7:0] main_bus_load_enable_bar;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_load_index_decode (
+  .Enable1_bar(1'b0),
+  .Enable2_bar(CLK),
+  .Enable3(1'b1),
+  .A(main_bus_load_index),
+  .Y(main_bus_load_enable_bar)
+);
+assign main_bus_load_index = ctrl_main_bus_load_index;
 
 // Main bus assert device index:
 //
@@ -237,6 +255,7 @@ wire reg_a_assert_lhs_bar;
 wire reg_a_assert_rhs_bar;
 wire reg_a_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
+  .CLEAR_bar(RST_bar),
   .LOAD(reg_a_load),
 
   .ASSERT_MAIN_bar(reg_a_assert_main_bar),
@@ -254,7 +273,7 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
 assign reg_a_assert_main_bar = main_bus_assert_enable_bar[2];
 assign reg_a_assert_lhs_bar = lhs_bus_assert_enable_bar[0];
 assign reg_a_assert_rhs_bar = rhs_bus_assert_enable_bar[0];
-assign reg_a_load = ctrl_load_reg_a;
+assign reg_a_load = main_bus_load_enable_bar[1];
 
 wire [7:0] reg_b_main_out;
 wire [7:0] reg_b_lhs_out;
@@ -264,6 +283,7 @@ wire reg_b_assert_lhs_bar;
 wire reg_b_assert_rhs_bar;
 wire reg_b_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
+  .CLEAR_bar(RST_bar),
   .LOAD(reg_b_load),
 
   .ASSERT_MAIN_bar(reg_b_assert_main_bar),
@@ -281,7 +301,7 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
 assign reg_b_assert_main_bar = main_bus_assert_enable_bar[3];
 assign reg_b_assert_lhs_bar = lhs_bus_assert_enable_bar[1];
 assign reg_b_assert_rhs_bar = rhs_bus_assert_enable_bar[1];
-assign reg_b_load = ctrl_load_reg_b;
+assign reg_b_load = main_bus_load_enable_bar[2];
 
 wire [7:0] reg_c_main_out;
 wire [7:0] reg_c_lhs_out;
@@ -291,6 +311,7 @@ wire reg_c_assert_lhs_bar;
 wire reg_c_assert_rhs_bar;
 wire reg_c_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
+  .CLEAR_bar(RST_bar),
   .LOAD(reg_c_load),
 
   .ASSERT_MAIN_bar(reg_c_assert_main_bar),
@@ -308,7 +329,7 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
 assign reg_c_assert_main_bar = main_bus_assert_enable_bar[4];
 assign reg_c_assert_lhs_bar = lhs_bus_assert_enable_bar[2];
 assign reg_c_assert_rhs_bar = rhs_bus_assert_enable_bar[2];
-assign reg_c_load = ctrl_load_reg_c;
+assign reg_c_load = main_bus_load_enable_bar[3];
 
 wire [7:0] reg_d_main_out;
 wire [7:0] reg_d_lhs_out;
@@ -318,6 +339,7 @@ wire reg_d_assert_lhs_bar;
 wire reg_d_assert_rhs_bar;
 wire reg_d_load;
 gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
+  .CLEAR_bar(RST_bar),
   .LOAD(reg_d_load),
 
   .ASSERT_MAIN_bar(reg_d_assert_main_bar),
@@ -335,9 +357,11 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
 assign reg_d_assert_main_bar = main_bus_assert_enable_bar[5];
 assign reg_d_assert_lhs_bar = lhs_bus_assert_enable_bar[3];
 assign reg_d_assert_rhs_bar = rhs_bus_assert_enable_bar[3];
-assign reg_d_load = ctrl_load_reg_d;
+assign reg_d_load = main_bus_load_enable_bar[4];
 
-// Constant register. Like a general purpose register except the LHS/RHS buses
+// Constant register. Transparent latch of memory data bus used for two byte
+// instructions.
+// Like a general purpose register except the LHS/RHS buses
 // are not connected and the data input is the memory data bus.
 wire [7:0] reg_const_main_out;
 wire [7:0] reg_const_lhs_out;
@@ -346,21 +370,15 @@ wire reg_const_assert_main_bar;
 wire reg_const_assert_lhs_bar;
 wire reg_const_assert_rhs_bar;
 wire reg_const_load;
-gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_const (
-  .LOAD(reg_const_load),
-  .ASSERT_MAIN_bar(reg_const_assert_main_bar),
-  .ASSERT_LHS_bar(1'b1),
-  .ASSERT_RHS_bar(1'b1),
-
-  .DATA_in(mem_data_bus),
-
-  .MAIN_out(reg_const_main_out)
+ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_const (
+  .LE(reg_const_load),
+  .OE_bar(reg_const_assert_main_bar),
+  .D(mem_data_bus),
+  .Q(reg_const_main_out)
 );
 
 // Device 1 on the main bus. Not on LHS/RHS buses.
 assign reg_const_assert_main_bar = main_bus_assert_enable_bar[1];
-assign reg_const_assert_lhs_bar = 1'b1;
-assign reg_const_assert_rhs_bar = 1'b1;
 assign reg_const_load = ctrl_load_reg_const;
 
 // Memory address bus
