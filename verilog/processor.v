@@ -11,6 +11,16 @@ module processor
 (
   input CLK,
   input RST_bar,
+
+  output [7:0] A,
+  output [7:0] B,
+  output [7:0] C,
+  output [7:0] D,
+  output [7:0] FLAGS,
+  output [15:0] PC,
+  output [15:0] MEMADDR,
+  output [7:0] MEMDATA,
+
   output HALT
 );
 
@@ -20,6 +30,13 @@ wire [7:0] mem_data_bus;
 wire [7:0] lhs_bus;
 wire [7:0] rhs_bus;
 wire [7:0] main_bus;
+
+// ALU flags register
+wire [7:0] reg_flags_out;
+
+assign MEMADDR = mem_addr_bus;
+assign MEMDATA = mem_data_bus;
+assign FLAGS = reg_flags_out;
 
 // Control lines - stage 1
 wire ctrl_instr_dispatch_bar;
@@ -225,7 +242,6 @@ wire [7:0] reg_flags_in = {
   alu_result[7],    // negative == sign bit of result
   alu_carry_out     // carry
 };
-wire [7:0] reg_flags_out;
 wire reg_flags_clk;
 
 // NB: two gate delays: inverter and and gate
@@ -256,7 +272,9 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
   .INC(ctrl_inc_pcra0),
   .ASSERT_bar(reg_pc_assert_bar),
   .BUS_in(mem_addr_bus),
-  .BUS_out(reg_pc_out)
+  .BUS_out(reg_pc_out),
+
+  .display_value(PC) // FIXME: change when we implement reg rewrite
 );
 
 // General purpose registers
@@ -278,7 +296,9 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
 
   .MAIN_out(reg_a_main_out),
   .LHS_out(reg_a_lhs_out),
-  .RHS_out(reg_a_rhs_out)
+  .RHS_out(reg_a_rhs_out),
+
+  .display_value(A)
 );
 
 // Device 2 on main bus. Device 0 on LHS/RHS buses.
@@ -305,7 +325,9 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
 
   .MAIN_out(reg_b_main_out),
   .LHS_out(reg_b_lhs_out),
-  .RHS_out(reg_b_rhs_out)
+  .RHS_out(reg_b_rhs_out),
+
+  .display_value(B)
 );
 
 // Device 3 on main bus. Device 1 on LHS/RHS buses.
@@ -332,7 +354,9 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
 
   .MAIN_out(reg_c_main_out),
   .LHS_out(reg_c_lhs_out),
-  .RHS_out(reg_c_rhs_out)
+  .RHS_out(reg_c_rhs_out),
+
+  .display_value(C)
 );
 
 // Device 4 on main bus. Device 2 on LHS/RHS buses.
@@ -359,7 +383,9 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
 
   .MAIN_out(reg_d_main_out),
   .LHS_out(reg_d_lhs_out),
-  .RHS_out(reg_d_rhs_out)
+  .RHS_out(reg_d_rhs_out),
+
+  .display_value(D)
 );
 
 // Device 5 on main bus. Device 3 on LHS/RHS buses.

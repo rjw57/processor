@@ -12,6 +12,14 @@ always #($max(1, 20 * DELAY_RISE)) CLK = ~CLK;
 
 // The processor itself.
 reg RST_bar;
+wire [7:0] A;
+wire [7:0] B;
+wire [7:0] C;
+wire [7:0] D;
+wire [7:0] FLAGS;
+wire [15:0] PC;
+wire [15:0] MEMADDR;
+wire [7:0] MEMDATA;
 wire HALT;
 processor #(
   .DELAY_RISE(DELAY_RISE),
@@ -23,6 +31,8 @@ processor #(
 ) dut (
   .CLK(CLK),
   .RST_bar(RST_bar),
+  .A(A), .B(B), .C(C), .D(D), .FLAGS(FLAGS), .PC(PC),
+  .MEMADDR(MEMADDR), .MEMDATA(MEMDATA),
   .HALT(HALT)
 );
 
