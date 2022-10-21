@@ -76,11 +76,11 @@ pipelinestage #(
 );
 
 // Pipeline stage 1 control lines
-assign ctrl_instr_dispatch_bar = pipeline_1_control_out[2];
-assign ctrl_load_reg_const = pipeline_1_control_out[3];
-assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[5:4];
-assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[7:6];
-assign ctrl_alu_opcode = pipeline_1_control_out[11:8];
+assign ctrl_instr_dispatch_bar = pipeline_1_control_out[0];
+assign ctrl_load_reg_const = pipeline_1_control_out[1];
+assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[3:2];
+assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[5:4];
+assign ctrl_alu_opcode = pipeline_1_control_out[9:6];
 
 // Pipeline stage 2 control lines
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];

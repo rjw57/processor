@@ -14,18 +14,18 @@ class Flags(enum.IntFlag):
 
 class Line(enum.IntFlag):
     # Stage 1
-    Bit0 = 1 << 0
-    Bit1 = 1 << 1
-    InstrDispatchBar = 1 << 2
-    LoadRegConst = 1 << 3
-    AssertLHSDeviceBit0 = 1 << 4
-    AssertLHSDeviceBit1 = 1 << 5
-    AssertRHSDeviceBit0 = 1 << 6
-    AssertRHSDeviceBit1 = 1 << 7
-    ALUOpcodeBit0 = 1 << 8
-    ALUOpcodeBit1 = 1 << 9
-    ALUOpcodeBit2 = 1 << 10
-    ALUOpcodeBit3 = 1 << 11
+    InstrDispatchBar = 1 << 0
+    LoadRegConst = 1 << 1
+    AssertLHSDeviceBit0 = 1 << 2
+    AssertLHSDeviceBit1 = 1 << 3
+    AssertRHSDeviceBit0 = 1 << 4
+    AssertRHSDeviceBit1 = 1 << 5
+    ALUOpcodeBit0 = 1 << 6
+    ALUOpcodeBit1 = 1 << 7
+    ALUOpcodeBit2 = 1 << 8
+    ALUOpcodeBit3 = 1 << 9
+    Bit10 = 1 << 10
+    Bit11 = 1 << 11
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
@@ -50,30 +50,30 @@ class Line(enum.IntFlag):
     Halt = 1 << 31
 
     # Convenience for LHS assert
-    AssertLHSRegA = 0 << 4
-    AssertLHSRegB = 1 << 4
-    AssertLHSRegC = 2 << 4
-    AssertLHSRegD = 3 << 4
+    AssertLHSRegA = 0 << 2
+    AssertLHSRegB = 1 << 2
+    AssertLHSRegC = 2 << 2
+    AssertLHSRegD = 3 << 2
 
     # Convenience for RHS assert
-    AssertRHSRegA = 0 << 6
-    AssertRHSRegB = 1 << 6
-    AssertRHSRegC = 2 << 6
-    AssertRHSRegD = 3 << 6
+    AssertRHSRegA = 0 << 4
+    AssertRHSRegB = 1 << 4
+    AssertRHSRegC = 2 << 4
+    AssertRHSRegD = 3 << 4
 
     # Convenience for ALU opcode
-    ALUOpcodeAdd = 0 << 8
-    ALUOpcodeSub = 1 << 8
-    ALUOpcodeBitAnd = 2 << 8
-    ALUOpcodeBitOr = 3 << 8
-    ALUOpcodeBitXor = 4 << 8
-    ALUOpcodeNotRHS = 5 << 8
-    ALUOpcodeLogicalShiftLeftLHS = 6 << 8
-    ALUOpcodeLogicalShiftRightLHS = 7 << 8
-    ALUOpcodeArithShiftRightLHS = 8 << 8
-    ALUOpcodeRotateLeftLHS = 9 << 8
-    ALUOpcodeRotateRightLHS = 10 << 8
-    ALUOpcodeZero = 11 << 8
+    ALUOpcodeAdd = 0 << 6
+    ALUOpcodeSub = 1 << 6
+    ALUOpcodeBitAnd = 2 << 6
+    ALUOpcodeBitOr = 3 << 6
+    ALUOpcodeBitXor = 4 << 6
+    ALUOpcodeNotRHS = 5 << 6
+    ALUOpcodeLogicalShiftLeftLHS = 6 << 6
+    ALUOpcodeLogicalShiftRightLHS = 7 << 6
+    ALUOpcodeArithShiftRightLHS = 8 << 6
+    ALUOpcodeRotateLeftLHS = 9 << 6
+    ALUOpcodeRotateRightLHS = 10 << 6
+    ALUOpcodeZero = 11 << 6
 
     # Convenience for main load
     LoadRegA = 1 << 16
