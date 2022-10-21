@@ -49,7 +49,6 @@ wire [3:0] ctrl_alu_opcode;
 wire [2:0] ctrl_main_bus_load_index;
 wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
-wire ctrl_load_reg_flags;
 wire ctrl_inc_pcra0;
 wire ctrl_inc_pcra1;
 wire ctrl_pipeline_cancel;
@@ -103,7 +102,6 @@ assign ctrl_alu_opcode = pipeline_1_control_out[9:6];
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
 assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
-assign ctrl_load_reg_flags = pipeline_2_control_out[7];
 assign ctrl_inc_pcra0 = pipeline_2_control_out[8];
 assign ctrl_inc_pcra1 = pipeline_2_control_out[9];
 assign ctrl_halt = pipeline_2_control_out[15];
@@ -234,9 +232,8 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .CARRY_OUT(alu_carry_out)
 );
 
-// ALU flags register: latched at the -ve going clock edge *if* the
-// ctrl_load_reg_flags control line is set. We latch at the -ve clock edge to
-// ensure the signal is stable for use in the next clock cycle.
+// ALU flags register: latched at the -ve going clock edge. We latch at the -ve
+// clock edge to ensure the signal is stable for use in the next clock cycle.
 wire [7:0] reg_flags_in = {
   6'b0,
   alu_result[7],    // negative == sign bit of result
@@ -244,11 +241,12 @@ wire [7:0] reg_flags_in = {
 };
 wire reg_flags_clk;
 
-// NB: two gate delays: inverter and and gate
-assign #(2*DELAY_RISE, 2*DELAY_FALL) reg_flags_clk = ctrl_load_reg_flags & !CLK;
+// NB: inverter gate delay
+assign #(DELAY_RISE, DELAY_FALL) reg_flags_clk = !CLK;
 
+// Flags register. Initiialised to zero during reset.
 ttl_74575 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
-  .Clk(ctrl_load_reg_flags & !CLK),
+  .Clk(reg_flags_clk),
   .Clear_bar(RST_bar),
   .OE_bar(1'b0),
   .D(reg_flags_in),

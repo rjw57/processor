@@ -38,8 +38,34 @@ integer i, j;
   LHS_prev = 8'h00;
   RHS_prev = 8'h00;
 
-  // Addition
+  // Zero
   OPCODE = 4'h0;
+  CARRY_IN = 1'b0;
+  `TBDELAY(2)
+  `TBTICK
+
+  for(i=0; i<256; i=i+37)
+  begin
+    for(j=0; j<256; j=j+47)
+    begin
+      LHS_prev <= LHS; RHS_prev <= RHS;
+      LHS <= i; RHS <= j;
+
+      `TBTICK
+      `TBDELAY(2)
+
+      `TBASSERT(
+        RESULT === 8'h00,
+        $sformatf(
+          "zero: got %0d",
+          RESULT
+        )
+      );
+    end
+  end
+
+  // Addition
+  OPCODE = 4'h1;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -65,7 +91,7 @@ integer i, j;
   end
 
   // Addition w/carry
-  OPCODE = 4'h0;
+  OPCODE = 4'h1;
   CARRY_IN = 1'b1;
   `TBDELAY(2)
   `TBTICK
@@ -91,7 +117,7 @@ integer i, j;
   end
 
   // Subtraction
-  OPCODE = 4'h1;
+  OPCODE = 4'h2;
   CARRY_IN = 1'b1;
   `TBDELAY(2)
   `TBTICK
@@ -117,7 +143,7 @@ integer i, j;
   end
 
   // Logical AND
-  OPCODE = 4'h2;
+  OPCODE = 4'h3;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -143,7 +169,7 @@ integer i, j;
   end
 
   // Logical OR
-  OPCODE = 4'h3;
+  OPCODE = 4'h4;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -169,7 +195,7 @@ integer i, j;
   end
 
   // Logical XOR
-  OPCODE = 4'h4;
+  OPCODE = 4'h5;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -195,7 +221,7 @@ integer i, j;
   end
 
   // ~RHS
-  OPCODE = 4'h5;
+  OPCODE = 4'h6;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -221,7 +247,7 @@ integer i, j;
   end
 
   // LHS << 1
-  OPCODE = 4'h6;
+  OPCODE = 4'h7;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -247,7 +273,7 @@ integer i, j;
   end
 
   // LHS >> 1
-  OPCODE = 4'h7;
+  OPCODE = 4'h8;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -273,7 +299,7 @@ integer i, j;
   end
 
   // LHS ~>> 1
-  OPCODE = 4'h8;
+  OPCODE = 4'h9;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -299,7 +325,7 @@ integer i, j;
   end
 
   // LHS <<< 1
-  OPCODE = 4'h9;
+  OPCODE = 4'hA;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -325,7 +351,7 @@ integer i, j;
   end
 
   // LHS >>> 1
-  OPCODE = 4'hA;
+  OPCODE = 4'hB;
   CARRY_IN = 1'b0;
   `TBDELAY(2)
   `TBTICK
@@ -345,32 +371,6 @@ integer i, j;
         $sformatf(
           "%0d >>> 1: expect %0d, got %0d",
           LHS_prev, {LHS_prev[0], LHS_prev[7:1]}, RESULT
-        )
-      );
-    end
-  end
-
-  // Zero
-  OPCODE = 4'hB;
-  CARRY_IN = 1'b0;
-  `TBDELAY(2)
-  `TBTICK
-
-  for(i=0; i<256; i=i+37)
-  begin
-    for(j=0; j<256; j=j+47)
-    begin
-      LHS_prev <= LHS; RHS_prev <= RHS;
-      LHS <= i; RHS <= j;
-
-      `TBTICK
-      `TBDELAY(2)
-
-      `TBASSERT(
-        RESULT === 8'h00,
-        $sformatf(
-          "zero: got %0d",
-          RESULT
         )
       );
     end

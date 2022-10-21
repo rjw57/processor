@@ -16,18 +16,18 @@
 //
 //  | Opcode  | Result     | Shift Op  | Shift Interp  | Logic Op  | Carry in  |
 //  |---------|------------|-----------|---------------|-----------|-----------|
-//  | 4'b0000 | LHS + RHS  | 2'b01     | 2'bXX         | 4'b1010   | 1'b0      |
-//  | 4'b0001 | LHS - RHS  | 2'b01     | 2'bXX         | 4'b0101   | 1'b1      |
-//  | 4'b0010 | LHS & RHS  | 2'b00     | 2'bXX         | 4'b1000   | 1'b0      |
-//  | 4'b0011 | LHS | RHS  | 2'b00     | 2'bXX         | 4'b1110   | 1'b0      |
-//  | 4'b0100 | LHS ^ RHS  | 2'b00     | 2'bXX         | 4'b0110   | 1'b0      |
-//  | 4'b0101 | ~RHS       | 2'b00     | 2'bXX         | 4'b0101   | 1'b0      |
-//  | 4'b0110 | LHS << 1   | 2'b10     | 2'b00         | 4'b0000   | 1'b0      |
-//  | 4'b0111 | LHS >> 1   | 2'b11     | 2'b00         | 4'b0000   | 1'b0      |
-//  | 4'b1000 | LHS ~>> 1  | 2'b11     | 2'b11         | 4'b0000   | 1'b0      |
-//  | 4'b1001 | LHS <<< 1  | 2'b10     | 2'b11         | 4'b0000   | 1'b0      |
-//  | 4'b1010 | LHS >>> 1  | 2'b11     | 2'b10         | 4'b0000   | 1'b0      |
-//  | 4'b1011 | Zero       | 2'b00     | 2'bXX         | 4'b0000   | 1'b0      |
+//  | 4'b0000 | Zero       | 2'b00     | 2'bXX         | 4'b0000   | 1'b0      |
+//  | 4'b0001 | LHS + RHS  | 2'b01     | 2'bXX         | 4'b1010   | 1'b0      |
+//  | 4'b0010 | LHS - RHS  | 2'b01     | 2'bXX         | 4'b0101   | 1'b1      |
+//  | 4'b0011 | LHS & RHS  | 2'b00     | 2'bXX         | 4'b1000   | 1'b0      |
+//  | 4'b0100 | LHS | RHS  | 2'b00     | 2'bXX         | 4'b1110   | 1'b0      |
+//  | 4'b0101 | LHS ^ RHS  | 2'b00     | 2'bXX         | 4'b0110   | 1'b0      |
+//  | 4'b0110 | ~RHS       | 2'b00     | 2'bXX         | 4'b0101   | 1'b0      |
+//  | 4'b0111 | LHS << 1   | 2'b10     | 2'b00         | 4'b0000   | 1'b0      |
+//  | 4'b1000 | LHS >> 1   | 2'b11     | 2'b00         | 4'b0000   | 1'b0      |
+//  | 4'b1001 | LHS ~>> 1  | 2'b11     | 2'b11         | 4'b0000   | 1'b0      |
+//  | 4'b1010 | LHS <<< 1  | 2'b10     | 2'b11         | 4'b0000   | 1'b0      |
+//  | 4'b1011 | LHS >>> 1  | 2'b11     | 2'b10         | 4'b0000   | 1'b0      |
 //
 // Note: '~>>' == arithmetic shift, '>>>' == rotate right, '<<<' == rotate left
 //
@@ -83,28 +83,36 @@ logicop #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) logicop(
   .VALUE_OUT(logicop_out)
 );
 
+// HACK: our simulator cannot infer that an opcode of 0 means the outputs are
+// well defined. In hardware, this doesn't matter.
+wire is_zero_op = (OPCODE === 4'h0) ? 1'b1: 1'b0;
+
 // latches
 ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_reg(
   .OE_bar     (1'b0),
-  .D          (shiftop_out),
+  .D          (is_zero_op ? 8'h00 : shiftop_out),
   .Clk        (CLK),
   .Q          (lhs_latch)
 );
 
 ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_reg(
   .OE_bar     (1'b0),
-  .D          (logicop_out),
+  .D          (is_zero_op ? 8'h00: logicop_out),
   .Clk        (CLK),
   .Q          (rhs_latch)
 );
 
 // stage 2
+wire [7:0] adder_result;
+wire adder_carry_out;
 adder #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) adder(
   .LHS(lhs_latch),
   .RHS(rhs_latch),
   .CARRY_IN(CARRY_IN),
-  .RESULT(RESULT),
-  .CARRY_OUT(CARRY_OUT)
+  .RESULT(adder_result),
+  .CARRY_OUT(adder_carry_out)
 );
+assign RESULT = adder_result;
+assign CARRY_OUT = adder_carry_out;
 
 endmodule
