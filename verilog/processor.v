@@ -211,20 +211,25 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .CARRY_OUT(alu_carry_out)
 );
 
-// ALU flags register: TODO can we implement RST behaviour easily in logic? Does
-// it matter in real hardware if the flags register starts in an unknown state?
-// Initialise to all 1s on reset so we don't bake in assumptions that it will be
-// zero on start in real hardware.
+// ALU flags register: latched at the -ve going clock edge *if* the
+// ctrl_load_reg_flags control line is set. We latch at the -ve clock edge to
+// ensure the signal is stable for use in the next clock cycle.
 wire [7:0] reg_flags_in = {
   6'b0,
   alu_result[7],    // negative == sign bit of result
   alu_carry_out     // carry
 };
 wire [7:0] reg_flags_out;
-ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
-  .LE(!RST_bar | ctrl_load_reg_flags),
+wire reg_flags_clk;
+
+// NB: two gate delays: inverter and and gate
+assign #(2*DELAY_RISE, 2*DELAY_FALL) reg_flags_clk = ctrl_load_reg_flags & !CLK;
+
+ttl_74575 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
+  .Clk(ctrl_load_reg_flags & !CLK),
+  .Clear_bar(RST_bar),
   .OE_bar(1'b0),
-  .D(RST_bar ? reg_flags_in : 8'hff),
+  .D(reg_flags_in),
   .Q(reg_flags_out)
 );
 
