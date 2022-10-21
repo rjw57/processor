@@ -24,5 +24,3 @@ entry:
   sub d, a // should == 0x31
 
   halt
-  sub a, b
-  sub d, a

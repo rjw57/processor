@@ -277,6 +277,32 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
   .display_value(PC) // FIXME: change when we implement reg rewrite
 );
 
+// Transfer register
+wire reg_tl_load, reg_th_load, reg_tx_load_select;
+wire reg_tl_assert_main_bar, reg_th_assert_main_bar, reg_tx_assert_addr_bar;
+wire [7:0] reg_tx_main_out;
+wire [15:0] reg_tx_addr_out;
+transferreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_tx (
+  .LOAD_LOW(reg_tl_load),
+  .LOAD_HIGH(reg_th_load),
+  .LOAD_SELECT(reg_tx_load_select),
+  .ASSERT_LOW_bar(reg_tl_assert_main_bar),
+  .ASSERT_HIGH_bar(reg_th_assert_main_bar),
+  .ASSERT_ADDR_bar(reg_tx_assert_addr_bar),
+  .MAIN_in(main_bus),
+  .ADDR_in(mem_addr_bus),
+  .MAIN_out(reg_tx_main_out),
+  .ADDR_out(reg_tx_addr_out)
+);
+
+// TODO:
+assign reg_tl_load = 1'b1;
+assign reg_th_load = 1'b1;
+assign reg_tx_load_select = 1'b0;
+assign reg_tl_assert_main_bar = 1'b1;
+assign reg_th_assert_main_bar = 1'b1;
+assign reg_tx_assert_addr_bar = 1'b1;
+
 // General purpose registers
 wire [7:0] reg_a_main_out;
 wire [7:0] reg_a_lhs_out;
