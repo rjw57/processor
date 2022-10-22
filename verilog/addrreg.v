@@ -6,10 +6,10 @@
 module addrreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   // Control lines
-  input CLK,              // Clock
-  input RST_bar,          // Asynchronous reset
-  input LOAD_bar,         // Load on next +ve clock
-  input INC,              // Increment on next +ve clock
+  input RST,              // Asynchronous reset
+  input INC,              // +ve going edge decrements
+  input DEC,              // +ve going edge increments
+  input LOAD_bar,         // asynchronous load
   input ASSERT_bar,       // Assert to output
 
   // Bus connection
@@ -39,47 +39,53 @@ ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) line_driver1(
   .Y(BUS_out[15:8])
 );
 
-ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg0(
-  .Clear_bar    (RST_bar),
-  .Load_bar     (LOAD_bar),
-  .ENT          (1'b1),
-  .ENP          (INC),
-  .D            (BUS_in[3:0]),
-  .Clk          (CLK),
-  .RCO          (rco[0]),
-  .Q            (value[3:0])
+wire up_clk, down_clk;
+assign up_clk = INC;
+assign down_clk = DEC;
+
+wire [2:0] tcu;
+wire [2:0] tcd;
+
+ttl_74193 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) counter_1(
+  .MR(RST),
+  .CPU(up_clk),
+  .CPD(down_clk),
+  .PL_bar(LOAD_bar),
+  .D(BUS_in[3:0]),
+  .Q(value[3:0]),
+  .TCU_bar(tcu[0]),
+  .TCD_bar(tcd[0])
 );
 
-ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg1(
-  .Clear_bar    (RST_bar),
-  .Load_bar     (LOAD_bar),
-  .ENT          (rco[0]),
-  .ENP          (1'b1),
-  .D            (BUS_in[7:4]),
-  .Clk          (CLK),
-  .RCO          (rco[1]),
-  .Q            (value[7:4])
+ttl_74193 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) counter_2(
+  .MR(RST),
+  .CPU(tcu[0]),
+  .CPD(tcd[0]),
+  .PL_bar(LOAD_bar),
+  .D(BUS_in[7:4]),
+  .Q(value[7:4]),
+  .TCU_bar(tcu[1]),
+  .TCD_bar(tcd[1])
 );
 
-ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg2(
-  .Clear_bar    (RST_bar),
-  .Load_bar     (LOAD_bar),
-  .ENT          (rco[1]),
-  .ENP          (1'b1),
-  .D            (BUS_in[11:8]),
-  .Clk          (CLK),
-  .RCO          (rco[2]),
-  .Q            (value[11:8])
+ttl_74193 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) counter_3(
+  .MR(RST),
+  .CPU(tcu[1]),
+  .CPD(tcd[1]),
+  .PL_bar(LOAD_bar),
+  .D(BUS_in[11:8]),
+  .Q(value[11:8]),
+  .TCU_bar(tcu[2]),
+  .TCD_bar(tcd[2])
 );
 
-ttl_74161 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg3(
-  .Clear_bar    (RST_bar),
-  .Load_bar     (LOAD_bar),
-  .ENT          (rco[2]),
-  .ENP          (1'b1),
-  .D            (BUS_in[15:12]),
-  .Clk          (CLK),
-  .Q            (value[15:12])
+ttl_74193 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) counter_4(
+  .MR(RST),
+  .CPU(tcu[2]),
+  .CPD(tcd[2]),
+  .PL_bar(LOAD_bar),
+  .D(BUS_in[15:12]),
+  .Q(value[15:12])
 );
 
 endmodule

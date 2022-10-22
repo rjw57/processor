@@ -1,7 +1,5 @@
 // Presettable 4-bit binary up/down counter
 //
-// Based on implementation at https://github.com/alfishe/74xxx/blob/master/rtl/sn74xxxx.sv
-//
 // Signal names from https://assets.nexperia.com/documents/data-sheet/74HC_HCT193.pdf
 module ttl_74193 #(parameter WIDTH = 4, DELAY_RISE = 0, DELAY_FALL = 0)
 (
@@ -19,35 +17,42 @@ module ttl_74193 #(parameter WIDTH = 4, DELAY_RISE = 0, DELAY_FALL = 0)
 reg tcu = 1'b0;
 reg tcd = 1'b0;
 reg [WIDTH-1:0] Q_current = 0;
+reg [WIDTH-1:0] Q_next = 0;
 
-always @(posedge MR or negedge PL_bar or posedge CPU or posedge CPD)
+always @(CPU or CPD)
 begin
-  if (MR)
+  if (!CPU)
   begin
-    Q_current <= 4'b0000;
-    tcu <= 1'b0;
-    tcd <= 1'b0;
+    Q_next = Q_current + 1;
   end
-  else if (~PL_bar)
-    Q_current <= D;
-  else if (CPU)
+  else if(!CPD)
   begin
-    Q_current <= Q_current + 1;
-    // Will carry if we're at 14 and we're going to count up
-    tcu <= (Q_current === 4'b1110) ? CPU : 1'b0;
-    tcd <= 1'b0;
-  end
-  else if (CPD)
-  begin
-    Q_current <= Q_current - 1;
-    tcu <= 1'b0;
-    // Will borrow if we're at 1 and we're going to count down
-    tcd <= (Q_current === 4'b0001) ? CPD : 1'b0;
+    Q_next = Q_current - 1;
   end
 end
 
-assign Q = Q_current;
-assign TCU_bar = ~tcu;
-assign TCD_bar = ~tcd;
+always @(posedge MR or negedge PL_bar or posedge CPU or posedge CPD)
+begin
+  if(MR)
+  begin
+    Q_current = 0;
+  end
+  else if(!PL_bar)
+  begin
+    Q_current = D;
+  end
+  else
+  begin
+    Q_current = Q_next;
+  end
+end
+
+assign #(DELAY_RISE, DELAY_FALL) Q = Q_current;
+assign #(DELAY_RISE, DELAY_FALL) TCU_bar = (
+  (Q_current === {(WIDTH){1'b1}}) ? CPU : 1'b1
+);
+assign #(DELAY_RISE, DELAY_FALL) TCD_bar = (
+  (Q_current === {(WIDTH){1'b0}}) ? CPD : 1'b1
+);
 
 endmodule

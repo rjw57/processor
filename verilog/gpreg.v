@@ -1,6 +1,9 @@
 // 8-bit general purpose register with synchronous load and asynchronous assert.
 //
 // Uses 4 ICs == 1x74574, 3x74541
+//
+// TODO: refactor as three 74573s latching the same data but asserting to the
+// three buses.
 
 module gpreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (

@@ -49,8 +49,7 @@ wire [3:0] ctrl_alu_opcode;
 wire [2:0] ctrl_main_bus_load_index;
 wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
-wire ctrl_inc_pcra0;
-wire ctrl_inc_pcra1;
+wire [1:0] ctrl_addr_reg_incrment_index;
 wire ctrl_pipeline_cancel;
 wire ctrl_halt;
 
@@ -102,8 +101,7 @@ assign ctrl_alu_opcode = pipeline_1_control_out[9:6];
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
 assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
-assign ctrl_inc_pcra0 = pipeline_2_control_out[7];
-assign ctrl_inc_pcra1 = pipeline_2_control_out[8];
+assign ctrl_addr_reg_incrment_index = pipeline_2_control_out[8:7];
 assign ctrl_halt = pipeline_2_control_out[15];
 
 // HACK
@@ -216,6 +214,22 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert_index_d
 );
 assign rhs_bus_assert_index = {1'b0, ctrl_rhs_bus_assert_index};
 
+// 16-bit register increment index
+//
+// 0 == no device
+// 1 == PC
+wire [2:0] addr_reg_increment_index;
+wire [7:0] addr_reg_increment;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_reg_increment_decode (
+  .Enable1_bar(1'b0),
+  .Enable2_bar(CLK),
+  .Enable3(1'b1),
+  .A(addr_reg_increment_index),
+  .Y(addr_reg_increment)
+);
+//assign addr_reg_increment_index = {1'b0, ctrl_addr_reg_incrment_index};
+assign addr_reg_increment_index = 3'h1; // HACK
+
 // ALU - main bus device 5
 wire [3:0] alu_opcode;
 wire alu_carry_in;
@@ -261,19 +275,25 @@ assign alu_carry_in = ctrl_alu_carry_in;
 assign alu_opcode = ctrl_alu_opcode;
 
 // Program counter register
+wire reg_pc_inc, reg_pc_dec, reg_pc_assert_bar;
 wire [15:0] reg_pc_out;
-wire reg_pc_assert_bar = 1'b0;
+wire reg_pc_reset;
+assign #(DELAY_RISE, DELAY_FALL) reg_pc_reset = !RST_bar;
 addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
-  .CLK(CLK),
-  .RST_bar(RST_bar),
+  .RST(reg_pc_reset),
+  .INC(reg_pc_inc),
+  .DEC(reg_pc_dec),
   .LOAD_bar(1'b1),
-  .INC(ctrl_inc_pcra0),
   .ASSERT_bar(reg_pc_assert_bar),
   .BUS_in(mem_addr_bus),
   .BUS_out(reg_pc_out),
 
   .display_value(PC) // FIXME: change when we implement reg rewrite
 );
+
+assign reg_pc_inc = addr_reg_increment[1];
+assign reg_pc_dec = 1'b1;
+assign reg_pc_assert_bar = 1'b0;
 
 // Transfer register
 wire reg_tl_load, reg_th_load, reg_tx_load_select;

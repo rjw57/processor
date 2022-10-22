@@ -39,8 +39,8 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit0 = 1 << 20
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
-    IncrementPCRA0 = 1 << 23
-    IncrementPCRA1 = 1 << 24
+    IncrementRegBit0 = 1 << 23
+    IncrementRegBit1 = 1 << 24
     Bit25 = 1 << 25
     Bit26 = 1 << 26
     Bit27 = 1 << 27
@@ -98,9 +98,12 @@ class Line(enum.IntFlag):
     AssertMainDeviceIndex14 = 14 << 20
     AssertMainDeviceIndex15 = 15 << 20
 
+    # Concenience for increment register index
+    IncrementRegPC = 1 << 23
+
 
 def control_lines(flags, opcode):
-    inc_pc_flag = Line.IncrementPCRA0
+    inc_pc_flag = Line.IncrementRegPC
 
     # Default to increment PC
     out = inc_pc_flag

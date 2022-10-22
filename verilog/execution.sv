@@ -49,9 +49,12 @@ begin
   $dumpfile(DUMP_FILENAME);
   $dumpvars;
 
-  // Hold reset for 10 clock cycles
+  // Hold reset for 10 clock cycles.
   RST_bar = 1'b0;
   repeat (10) @(posedge CLK);
+
+  // Reset will not change instantaneously after clock edge; add a gate delay.
+  #(DELAY_RISE)
   RST_bar = 1'b1;
 
   // Wait for HALT
