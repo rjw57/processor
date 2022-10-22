@@ -140,7 +140,7 @@ memory #(
 );
 
 // Main bus load device index. We use the clock as an enable to ensure that
-// the -ve going edge of the load line happens mid cycle. This is to ensure the
+// the +ve going edge of the load line happens mid cycle. This is to ensure the
 // register value is stable for subsequent cycles to latch the values. Without
 // this single cycle reuse of registers, e.g. a train of add a, ... instructoins,
 // would use old versions of the a register.
@@ -154,10 +154,14 @@ memory #(
 // 4 == D reg
 wire [2:0] main_bus_load_index;
 wire [7:0] main_bus_load_enable_bar;
+wire main_load_index_decode_clk;
+// We want to make sure the control lines have settled before starting a load.
+// This emulates havign a two inverter delay.
+assign #(2*DELAY_RISE, 2*DELAY_FALL) main_load_index_decode_clk = CLK;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_load_index_decode (
   .Enable1_bar(1'b0),
-  .Enable2_bar(CLK),
-  .Enable3(1'b1),
+  .Enable2_bar(1'b0),
+  .Enable3(main_load_index_decode_clk),
   .A(main_bus_load_index),
   .Y(main_bus_load_enable_bar)
 );
