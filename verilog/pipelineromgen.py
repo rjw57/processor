@@ -24,9 +24,9 @@ class Line(enum.IntFlag):
     ALUOpcodeBit1 = 1 << 7
     ALUOpcodeBit2 = 1 << 8
     ALUOpcodeBit3 = 1 << 9
-    Bit10 = 1 << 10
-    Bit11 = 1 << 11
-    Bit12 = 1 << 12
+    TickRegBit0 = 1 << 10
+    TickRegBit1 = 1 << 11
+    TickRegDown = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
     Bit15 = 1 << 15
@@ -39,8 +39,8 @@ class Line(enum.IntFlag):
     AssertMainDeviceBit0 = 1 << 20
     AssertMainDeviceBit1 = 1 << 21
     AssertMainDeviceBit2 = 1 << 22
-    IncrementRegBit0 = 1 << 23
-    IncrementRegBit1 = 1 << 24
+    Bit23 = 1 << 23
+    Bit24 = 1 << 24
     Bit25 = 1 << 25
     Bit26 = 1 << 26
     Bit27 = 1 << 27
@@ -75,6 +75,9 @@ class Line(enum.IntFlag):
     ALUOpcodeRotateLeftLHS = 10 << 6
     ALUOpcodeRotateRightLHS = 11 << 6
 
+    # Concenience for increment register index
+    TickRegPC = 1 << 10
+
     # Convenience for main load
     LoadRegA = 1 << 16
     LoadRegB = 2 << 16
@@ -98,12 +101,9 @@ class Line(enum.IntFlag):
     AssertMainDeviceIndex14 = 14 << 20
     AssertMainDeviceIndex15 = 15 << 20
 
-    # Concenience for increment register index
-    IncrementRegPC = 1 << 23
-
 
 def control_lines(flags, opcode):
-    inc_pc_flag = Line.IncrementRegPC
+    inc_pc_flag = Line.TickRegPC
 
     # Default to increment PC
     out = inc_pc_flag
