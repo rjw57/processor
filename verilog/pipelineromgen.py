@@ -23,7 +23,7 @@ class Line(enum.IntFlag):
     ALUOpcodeBit1 = 1 << 6
     ALUOpcodeBit2 = 1 << 7
     ALUOpcodeBit3 = 1 << 8
-    Bit9 = 1 << 0
+    AddrBusRequest = 1 << 9
     Bit10 = 1 << 10
     Bit11 = 1 << 11
     Bit12 = 1 << 12
@@ -39,12 +39,12 @@ class Line(enum.IntFlag):
     AssertMainBit0 = 1 << 20
     AssertMainBit1 = 1 << 21
     AssertMainBit2 = 1 << 22
-    Bit23 = 1 << 23
-    Bit24 = 1 << 24
-    Bit25 = 1 << 25
-    Bit26 = 1 << 26
-    Bit27 = 1 << 27
-    Bit28 = 1 << 28
+    LoadAddrBit0 = 1 << 23
+    LoadAddrBit1 = 1 << 24
+    LoadAddrBit2 = 1 << 25
+    AssertAddrBit0 = 1 << 26
+    AssertAddrBit1 = 1 << 27
+    AssertAddrBit2 = 1 << 28
     Bit29 = 1 << 29
     Bit30 = 1 << 30
     Halt = 1 << 31
@@ -75,14 +75,13 @@ class Line(enum.IntFlag):
     ALUOpcodeRotateLeftLHS = 10 << 5
     ALUOpcodeRotateRightLHS = 11 << 5
 
-    # Concenience for increment register index
-    TickRegPC = 1 << 10
-
     # Convenience for main load
     LoadRegA = 1 << 16
     LoadRegB = 2 << 16
     LoadRegC = 3 << 16
     LoadRegD = 4 << 16
+    LoadRegTL = 5 << 16
+    LoadRegTH = 6 << 16
 
     # Convenience for main bus assert device selection
     AssertMainRegConst = 1 << 20
@@ -91,22 +90,24 @@ class Line(enum.IntFlag):
     AssertMainRegC = 4 << 20
     AssertMainRegD = 5 << 20
     AssertMainALUResult = 6 << 20
-    AssertMainIndex7 = 7 << 20
-    AssertMainIndex8 = 8 << 20
-    AssertMainIndex9 = 9 << 20
-    AssertMainIndex10 = 10 << 20
-    AssertMainIndex11 = 11 << 20
-    AssertMainIndex12 = 12 << 20
-    AssertMainIndex13 = 13 << 20
-    AssertMainIndex14 = 14 << 20
-    AssertMainIndex15 = 15 << 20
+
+    # Convenience for address bus load device selection
+    # No device == index 0
+    LoadRegPC = 1 << 23
+    LoadRegRA = 2 << 23  # TODO
+    LoadRegSI = 3 << 23
+
+    # Concenience for address bus assert device selection
+    AssertAddrRegLHSRHS = 0 << 26
+    AssertAddrRegPC = 1 << 26
+    AssertAddrRegRS = 2 << 26  # TODO
+    AssertAddrRegSI = 3 << 26
 
 
 def control_lines(flags, opcode):
-    inc_pc_flag = Line.TickRegPC
-
-    # Default to increment PC
-    out = inc_pc_flag
+    # Default to assert PC
+    assert_pc = Line.AssertAddrRegPC
+    out = assert_pc
 
     # is the carry flag set
     is_carry = (flags & Flags.Carry) != 0
@@ -124,7 +125,6 @@ def control_lines(flags, opcode):
         # FIXME: halt still increments PC. We need some sort
         # of pipeline stall support
         out |= Line.Halt
-        out &= ~inc_pc_flag
     elif opcode == Opcode.MOV_REGA_IMM:
         out |= (
             Line.LoadRegConst
@@ -352,6 +352,14 @@ def control_lines(flags, opcode):
         out |= (
             Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeAdd | set_input_carry |
             Line.LoadRegD | Line.AssertMainALUResult
+        )
+    elif opcode == Opcode.MOV_REGSI_REGAB:
+        # FIXME: we need to insert a nop into the pipeline because we miss the
+        # next instruction otherwise
+        out &= ~assert_pc
+        out |= (
+            Line.AssertLHSRegA | Line.AssertRHSRegB | Line.LoadRegSI |
+            Line.AssertAddrRegLHSRHS | Line.AddrBusRequest
         )
 
     return out

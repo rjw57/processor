@@ -31,7 +31,7 @@ begin
   end
 end
 
-always @(posedge MR or negedge PL_bar or posedge CPU or posedge CPD)
+always @(MR or PL_bar or D)
 begin
   if(MR)
   begin
@@ -41,7 +41,11 @@ begin
   begin
     Q_current = D;
   end
-  else
+end
+
+always @(posedge CPU or posedge CPD)
+begin
+  if(PL_bar & !MR)
   begin
     Q_current = Q_next;
   end
