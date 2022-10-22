@@ -29,7 +29,7 @@ class Line(enum.IntFlag):
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
-    InstrDispatchBar = 1 << 15 # Can this be merged with LoadRegConst?
+    Bit15 = 1 << 15
 
     # Stage 2
     LoadMainBit0 = 1 << 16
@@ -127,29 +127,25 @@ def control_lines(flags, opcode):
         out &= ~inc_pc_flag
     elif opcode == Opcode.MOV_REGA_IMM:
         out |= (
-            Line.InstrDispatchBar
-            | Line.LoadRegConst
+            Line.LoadRegConst
             | Line.LoadRegA
             | Line.AssertMainRegConst
         )
     elif opcode == Opcode.MOV_REGB_IMM:
         out |= (
-            Line.InstrDispatchBar
-            | Line.LoadRegConst
+            Line.LoadRegConst
             | Line.LoadRegB
             | Line.AssertMainRegConst
         )
     elif opcode == Opcode.MOV_REGC_IMM:
         out |= (
-            Line.InstrDispatchBar
-            | Line.LoadRegConst
+            Line.LoadRegConst
             | Line.LoadRegC
             | Line.AssertMainRegConst
         )
     elif opcode == Opcode.MOV_REGD_IMM:
         out |= (
-            Line.InstrDispatchBar
-            | Line.LoadRegConst
+            Line.LoadRegConst
             | Line.LoadRegD
             | Line.AssertMainRegConst
         )

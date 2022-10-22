@@ -39,7 +39,6 @@ assign MEMDATA = mem_data_bus;
 assign FLAGS = reg_flags_out;
 
 // Control lines - stage 1
-wire ctrl_instr_dispatch_bar;
 wire ctrl_load_reg_const;
 wire [1:0] ctrl_lhs_bus_assert_index;
 wire [1:0] ctrl_rhs_bus_assert_index;
@@ -98,7 +97,6 @@ assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[4:3];
 assign ctrl_alu_opcode = pipeline_1_control_out[8:5];
 //assign ctrl_addr_reg_tick_index = pipeline_1_control_out[11:10];
 //assign ctrl_addr_reg_tick_down = pipeline_1_control_out[12];
-assign ctrl_instr_dispatch_bar = pipeline_1_control_out[15];
 
 // Pipeline stage 2 control lines
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
@@ -113,10 +111,14 @@ assign ctrl_pipeline_cancel = 1'b0;
 //
 // Simulate a 74541 line driver chip with pull downs on the
 // output. Note that if we use a 74541 then there are two active low output
-// enable lines which we tie to !RST_bar and ctrl_instr_dispatch_bar. This also
-// requires an extra inverter.
+// enable lines which we tie to !RST_bar and ctrl_load_reg_const. This also
+// requires an extra inverter. In real hardware we may not need this since we
+// don't care about the initial state of the next instruction register; it will
+// get loaded with the first instruction during reset.
+wire inverted_rst_bar;
+assign #(DELAY_RISE, DELAY_FALL) inverted_rst_bar = !RST_bar;
 assign #(DELAY_RISE, DELAY_FALL) next_instruction =
-  (ctrl_instr_dispatch_bar | !RST_bar) ? 8'h00 : mem_data_bus;
+  (ctrl_load_reg_const | inverted_rst_bar) ? 8'h00 : mem_data_bus;
 
 // Halt line
 assign HALT = ctrl_halt;
