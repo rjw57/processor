@@ -14,22 +14,22 @@ class Flags(enum.IntFlag):
 
 class Line(enum.IntFlag):
     # Stage 1
-    InstrDispatchBar = 1 << 0
-    LoadRegConst = 1 << 1
-    AssertLHSBit0 = 1 << 2
-    AssertLHSBit1 = 1 << 3
-    AssertRHSBit0 = 1 << 4
-    AssertRHSBit1 = 1 << 5
-    ALUOpcodeBit0 = 1 << 6
-    ALUOpcodeBit1 = 1 << 7
-    ALUOpcodeBit2 = 1 << 8
-    ALUOpcodeBit3 = 1 << 9
+    LoadRegConst = 1 << 0
+    AssertLHSBit0 = 1 << 1
+    AssertLHSBit1 = 1 << 2
+    AssertRHSBit0 = 1 << 3
+    AssertRHSBit1 = 1 << 4
+    ALUOpcodeBit0 = 1 << 5
+    ALUOpcodeBit1 = 1 << 6
+    ALUOpcodeBit2 = 1 << 7
+    ALUOpcodeBit3 = 1 << 8
+    Bit9 = 1 << 0
     Bit10 = 1 << 10
     Bit11 = 1 << 11
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
-    Bit15 = 1 << 15
+    InstrDispatchBar = 1 << 15 # Can this be merged with LoadRegConst?
 
     # Stage 2
     LoadMainBit0 = 1 << 16
@@ -50,30 +50,30 @@ class Line(enum.IntFlag):
     Halt = 1 << 31
 
     # Convenience for LHS assert
-    AssertLHSRegA = 0 << 2
-    AssertLHSRegB = 1 << 2
-    AssertLHSRegC = 2 << 2
-    AssertLHSRegD = 3 << 2
+    AssertLHSRegA = 0 << 1
+    AssertLHSRegB = 1 << 1
+    AssertLHSRegC = 2 << 1
+    AssertLHSRegD = 3 << 1
 
     # Convenience for RHS assert
-    AssertRHSRegA = 0 << 4
-    AssertRHSRegB = 1 << 4
-    AssertRHSRegC = 2 << 4
-    AssertRHSRegD = 3 << 4
+    AssertRHSRegA = 0 << 3
+    AssertRHSRegB = 1 << 3
+    AssertRHSRegC = 2 << 3
+    AssertRHSRegD = 3 << 3
 
     # Convenience for ALU opcode
-    ALUOpcodeZero = 0 << 6
-    ALUOpcodeAdd = 1 << 6
-    ALUOpcodeSub = 2 << 6
-    ALUOpcodeBitAnd = 3 << 6
-    ALUOpcodeBitOr = 4 << 6
-    ALUOpcodeBitXor = 5 << 6
-    ALUOpcodeNotRHS = 6 << 6
-    ALUOpcodeLogicalShiftLeftLHS = 7 << 6
-    ALUOpcodeLogicalShiftRightLHS = 8 << 6
-    ALUOpcodeArithShiftRightLHS = 9 << 6
-    ALUOpcodeRotateLeftLHS = 10 << 6
-    ALUOpcodeRotateRightLHS = 11 << 6
+    ALUOpcodeZero = 0 << 5
+    ALUOpcodeAdd = 1 << 5
+    ALUOpcodeSub = 2 << 5
+    ALUOpcodeBitAnd = 3 << 5
+    ALUOpcodeBitOr = 4 << 5
+    ALUOpcodeBitXor = 5 << 5
+    ALUOpcodeNotRHS = 6 << 5
+    ALUOpcodeLogicalShiftLeftLHS = 7 << 5
+    ALUOpcodeLogicalShiftRightLHS = 8 << 5
+    ALUOpcodeArithShiftRightLHS = 9 << 5
+    ALUOpcodeRotateLeftLHS = 10 << 5
+    ALUOpcodeRotateRightLHS = 11 << 5
 
     # Concenience for increment register index
     TickRegPC = 1 << 10
