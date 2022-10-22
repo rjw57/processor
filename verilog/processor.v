@@ -49,8 +49,8 @@ wire [3:0] ctrl_alu_opcode;
 wire [2:0] ctrl_main_bus_load_index;
 wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
-wire [1:0] ctrl_addr_reg_tick_index;
-wire ctrl_addr_reg_tick_down;
+//wire [1:0] ctrl_addr_reg_tick_index;
+//wire ctrl_addr_reg_tick_down;
 wire ctrl_pipeline_cancel;
 wire ctrl_halt;
 
@@ -97,8 +97,8 @@ assign ctrl_load_reg_const = pipeline_1_control_out[1];
 assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[3:2];
 assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[5:4];
 assign ctrl_alu_opcode = pipeline_1_control_out[9:6];
-assign ctrl_addr_reg_tick_index = pipeline_1_control_out[11:10];
-assign ctrl_addr_reg_tick_down = pipeline_1_control_out[12];
+//assign ctrl_addr_reg_tick_index = pipeline_1_control_out[11:10];
+//assign ctrl_addr_reg_tick_down = pipeline_1_control_out[12];
 
 // Pipeline stage 2 control lines
 assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
@@ -220,6 +220,7 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert_index_d
 );
 assign rhs_bus_assert_index = {1'b0, ctrl_rhs_bus_assert_index};
 
+/*
 // 16-bit register increment/decrement index. The ctrl_addr_reg_tick_down line
 // controls whether it is a tick up or down.
 //
@@ -245,6 +246,7 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_reg_decrement
   .A(addr_reg_tick_index),
   .Y(addr_reg_decrement)
 );
+*/
 
 // ALU - main bus device 5
 wire [3:0] alu_opcode;
@@ -307,8 +309,8 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
   .display_value(PC) // FIXME: change when we implement reg rewrite
 );
 
-assign reg_pc_inc = addr_reg_increment[1];
-assign reg_pc_dec = addr_reg_decrement[1];
+assign reg_pc_inc = CLK;
+assign reg_pc_dec = 1'b1;
 assign reg_pc_assert_bar = 1'b0;
 
 // Transfer register

@@ -16,29 +16,29 @@ class Line(enum.IntFlag):
     # Stage 1
     InstrDispatchBar = 1 << 0
     LoadRegConst = 1 << 1
-    AssertLHSDeviceBit0 = 1 << 2
-    AssertLHSDeviceBit1 = 1 << 3
-    AssertRHSDeviceBit0 = 1 << 4
-    AssertRHSDeviceBit1 = 1 << 5
+    AssertLHSBit0 = 1 << 2
+    AssertLHSBit1 = 1 << 3
+    AssertRHSBit0 = 1 << 4
+    AssertRHSBit1 = 1 << 5
     ALUOpcodeBit0 = 1 << 6
     ALUOpcodeBit1 = 1 << 7
     ALUOpcodeBit2 = 1 << 8
     ALUOpcodeBit3 = 1 << 9
-    TickRegBit0 = 1 << 10
-    TickRegBit1 = 1 << 11
-    TickRegDown = 1 << 12
+    Bit10 = 1 << 10
+    Bit11 = 1 << 11
+    Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
     Bit15 = 1 << 15
 
     # Stage 2
-    LoadMainDeviceBit0 = 1 << 16
-    LoadMainDeviceBit1 = 1 << 17
-    LoadMainDeviceBit2 = 1 << 18
+    LoadMainBit0 = 1 << 16
+    LoadMainBit1 = 1 << 17
+    LoadMainBit2 = 1 << 18
     ALUCarryIn = 1 << 19
-    AssertMainDeviceBit0 = 1 << 20
-    AssertMainDeviceBit1 = 1 << 21
-    AssertMainDeviceBit2 = 1 << 22
+    AssertMainBit0 = 1 << 20
+    AssertMainBit1 = 1 << 21
+    AssertMainBit2 = 1 << 22
     Bit23 = 1 << 23
     Bit24 = 1 << 24
     Bit25 = 1 << 25
@@ -91,15 +91,15 @@ class Line(enum.IntFlag):
     AssertMainRegC = 4 << 20
     AssertMainRegD = 5 << 20
     AssertMainALUResult = 6 << 20
-    AssertMainDeviceIndex7 = 7 << 20
-    AssertMainDeviceIndex8 = 8 << 20
-    AssertMainDeviceIndex9 = 9 << 20
-    AssertMainDeviceIndex10 = 10 << 20
-    AssertMainDeviceIndex11 = 11 << 20
-    AssertMainDeviceIndex12 = 12 << 20
-    AssertMainDeviceIndex13 = 13 << 20
-    AssertMainDeviceIndex14 = 14 << 20
-    AssertMainDeviceIndex15 = 15 << 20
+    AssertMainIndex7 = 7 << 20
+    AssertMainIndex8 = 8 << 20
+    AssertMainIndex9 = 9 << 20
+    AssertMainIndex10 = 10 << 20
+    AssertMainIndex11 = 11 << 20
+    AssertMainIndex12 = 12 << 20
+    AssertMainIndex13 = 13 << 20
+    AssertMainIndex14 = 14 << 20
+    AssertMainIndex15 = 15 << 20
 
 
 def control_lines(flags, opcode):
