@@ -148,7 +148,7 @@ ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) instr_dispatch_lat
   .Q(instr_dispatch_prev_instr)
 );
 
-// In reality this woulr be implemented with some and gates and a mutiplexer.
+// In reality this would be implemented with some and gates and a mutiplexer.
 assign #(2*DELAY_RISE, 2*DELAY_FALL) next_instruction = (
   (ctrl_load_reg_const & ctrl_addr_bus_request) ? instr_dispatch_prev_instr : instr_dispatch_current_instr);
 
@@ -170,42 +170,42 @@ memory #(
   .DATA_OUT(memory_data_out)
 );
 
-// Main bus load device index. We use the clock as an enable to ensure that
-// the +ve going edge of the load line happens mid cycle. This is to ensure the
-// register value is stable for subsequent cycles to latch the values. Without
-// this single cycle reuse of registers, e.g. a train of add a, ... instructoins,
-// would use old versions of the a register.
+// Main and address bus load device index decode. We use the clock as an enable
+// to ensure that the +ve going edge of the load line happens mid cycle. This is
+// to ensure the register value is stable for subsequent cycles to latch the
+// values. Without this single cycle reuse of registers, e.g. a train of add a,
+// ... instructions, would use old versions of the a register.
 //
 // FIXME: this sort of "half clock cycle" magic has a bit of a smell about it :(
-//
-// 0 == no device
-// 1 == A reg
-// 2 == B reg
-// 3 == C reg
-// 4 == D reg
+
+// We want to make sure the control lines have settled before starting a load.
+// This emulates having an inverter delay.
+wire load_index_decode_enable;
+assign #(DELAY_RISE, DELAY_FALL) load_index_decode_enable = ~CLK;
+
 wire [2:0] main_bus_load_index;
 wire [7:0] main_bus_load_enable_bar;
-wire main_load_index_decode_clk;
-// We want to make sure the control lines have settled before starting a load.
-// This emulates havign a two inverter delay.
-assign #(2*DELAY_RISE, 2*DELAY_FALL) main_load_index_decode_clk = CLK;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_load_index_decode (
-  .Enable1_bar(1'b0),
+  .Enable1_bar(load_index_decode_enable),
   .Enable2_bar(1'b0),
-  .Enable3(main_load_index_decode_clk),
+  .Enable3(1'b1),
   .A(main_bus_load_index),
   .Y(main_bus_load_enable_bar)
 );
 assign main_bus_load_index = ctrl_main_bus_load_index;
 
+wire [2:0] addr_bus_load_index;
+wire [7:0] addr_bus_load_enable_bar;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_load_index_decode (
+  .Enable1_bar(load_index_decode_enable),
+  .Enable2_bar(1'b0),
+  .Enable3(1'b1),
+  .A(addr_bus_load_index),
+  .Y(addr_bus_load_enable_bar)
+);
+assign addr_bus_load_index = ctrl_addr_bus_load_index;
+
 // Main bus assert device index:
-//
-// 0 == no device
-// 1 == constant reg
-// 2 == A reg
-// 3 == B reg
-// 4 == C reg
-// 5 == D reg
 wire [2:0] main_bus_assert_index;
 wire [7:0] main_bus_assert_enable_bar;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_assert_index_decode (
@@ -218,11 +218,6 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_assert_index_
 assign main_bus_assert_index = ctrl_main_bus_assert_index;
 
 // LHS bus assert device index:
-//
-// 0 == A reg
-// 1 == B reg
-// 2 == C reg
-// 3 == D reg
 wire [2:0] lhs_bus_assert_index;
 wire [7:0] lhs_bus_assert_enable_bar;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_assert_index_decode (
@@ -235,11 +230,6 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) lhs_assert_index_d
 assign lhs_bus_assert_index = {1'b0, ctrl_lhs_bus_assert_index};
 
 // RHS bus assert device index:
-//
-// 0 == A reg
-// 1 == B reg
-// 2 == C reg
-// 3 == D reg
 wire [2:0] rhs_bus_assert_index;
 wire [7:0] rhs_bus_assert_enable_bar;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert_index_decode (
@@ -250,29 +240,6 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) rhs_assert_index_d
   .Y(rhs_bus_assert_enable_bar)
 );
 assign rhs_bus_assert_index = {1'b0, ctrl_rhs_bus_assert_index};
-
-// Main bus load device index. We use the clock as an enable to ensure that
-// the +ve going edge of the load line happens mid cycle just like with the main
-// bus load.
-//
-// 0 == no device
-// 1 == PC reg
-// 2 == RA reg
-// 3 == SI reg
-wire [2:0] addr_bus_load_index;
-wire [7:0] addr_bus_load_enable_bar;
-wire addr_load_index_decode_clk;
-// We want to make sure the control lines have settled before starting a load.
-// This emulates havign a two inverter delay.
-assign #(2*DELAY_RISE, 2*DELAY_FALL) addr_load_index_decode_clk = CLK;
-ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_load_index_decode (
-  .Enable1_bar(1'b0),
-  .Enable2_bar(1'b0),
-  .Enable3(addr_load_index_decode_clk),
-  .A(addr_bus_load_index),
-  .Y(addr_bus_load_enable_bar)
-);
-assign addr_bus_load_index = ctrl_addr_bus_load_index;
 
 // Address bus assert device index:
 wire [2:0] addr_bus_assert_index;
