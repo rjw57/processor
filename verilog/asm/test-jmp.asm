@@ -6,7 +6,7 @@ entry:
   mov tx, $label
   jmp tx
   halt
-.org 0x0105
+.org 0x3210
 label:
   mov c, 0x45
   mov tx, 0x1234

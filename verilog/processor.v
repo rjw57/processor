@@ -331,13 +331,14 @@ ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_lhsrhs_latch_2
 
 // Program counter register
 wire reg_pc_inc, reg_pc_dec, reg_pc_assert_bar;
+wire [1:0] reg_pc_direction;
 wire [15:0] reg_pc_out;
 wire reg_pc_reset, reg_pc_load;
 assign #(DELAY_RISE, DELAY_FALL) reg_pc_reset = !RST_bar;
 addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
   .RST(reg_pc_reset),
-  .INC(reg_pc_inc),
-  .DEC(reg_pc_dec),
+  .CLK(CLK),
+  .DIRECTION(reg_pc_direction),
   .LOAD_bar(reg_pc_load),
   .ASSERT_bar(reg_pc_assert_bar),
   .BUS_in(mem_addr_bus),
@@ -345,17 +346,20 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
 
   .display_value(PC) // FIXME: change when we implement reg rewrite
 );
-assign reg_pc_inc = CLK | ctrl_addr_bus_request; // FIXME: add OR gate delay
-assign reg_pc_dec = 1'b1;
+
+// TODO: maybe chage DIRECTION flag so this can just pass through
+// ctrl_addr_bus_request?
+assign reg_pc_direction = ctrl_addr_bus_request ? 0 : 1;
 
 // SI register
 wire reg_si_inc, reg_si_dec, reg_si_assert_bar;
+wire [1:0] reg_si_direction;
 wire [15:0] reg_si_out;
 wire reg_si_load;
 addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_si (
   .RST(1'b0),
-  .INC(reg_si_inc),
-  .DEC(reg_si_dec),
+  .CLK(CLK),
+  .DIRECTION(reg_si_direction),
   .LOAD_bar(reg_si_load),
   .ASSERT_bar(reg_si_assert_bar),
   .BUS_in(mem_addr_bus),
@@ -363,8 +367,8 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_si (
 
   .display_value(SI)
 );
-assign reg_si_inc = 1'b1;
-assign reg_si_dec = 1'b1;
+assign reg_si_direction = 2'b0;
+
 
 // Transfer register sitting on both address and main buses
 wire reg_tl_load, reg_th_load, reg_tx_load;

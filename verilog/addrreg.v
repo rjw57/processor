@@ -1,14 +1,12 @@
-// 16-bit address register with asynchronous reset, synchronous load and
-// synchronous increment.
-//
-// Uses: 6 ICs == 4x74161, 2x74541
+// 16-bit address register with asynchronous reset, asynchronous load and
+// synchronous increment/decrement.
 
 module addrreg #(parameter DELAY_RISE = 0, DELAY_FALL = 0)
 (
   // Control lines
   input RST,              // Asynchronous reset
-  input INC,              // +ve going edge decrements
-  input DEC,              // +ve going edge increments
+  input CLK,              // Clock - count happens on *-ve* going edge
+  input [1:0] DIRECTION,  // Count direction: 0 - none, 1 - up, 2 - down
   input LOAD_bar,         // asynchronous load
   input ASSERT_bar,       // Assert to output
 
@@ -39,9 +37,18 @@ ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) line_driver1(
   .Y(BUS_out[15:8])
 );
 
+wire [7:0] direction_out;
+ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) direction_decode (
+  .Enable1_bar(1'b0),
+  .Enable2_bar(CLK),
+  .Enable3(1'b1),
+  .A({1'b0, DIRECTION}),
+  .Y(direction_out)
+);
+
 wire up_clk, down_clk;
-assign up_clk = INC;
-assign down_clk = DEC;
+assign down_clk = direction_out[2];
+assign up_clk = direction_out[1];
 
 wire [2:0] tcu;
 wire [2:0] tcd;
