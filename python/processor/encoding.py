@@ -5,6 +5,8 @@ class Encoding(enum.Enum):
     NOP                 = [0x00]
     HALT                = [0x01]
 
+    JMP_IMM             = [0x10, '<0', '>0']
+
     MOV_REGA_REGB       = [0x40]
     MOV_REGA_REGC       = [0x41]
     MOV_REGA_REGD       = [0x42]
@@ -18,10 +20,10 @@ class Encoding(enum.Enum):
     MOV_REGD_REGB       = [0x4a]
     MOV_REGD_REGC       = [0x4b]
 
-    MOV_REGA_IMM        = [0x50, '#0']
-    MOV_REGB_IMM        = [0x51, '#0']
-    MOV_REGC_IMM        = [0x52, '#0']
-    MOV_REGD_IMM        = [0x53, '#0']
+    MOV_REGA_IMM        = [0x50, '<0']
+    MOV_REGB_IMM        = [0x51, '<0']
+    MOV_REGC_IMM        = [0x52, '<0']
+    MOV_REGD_IMM        = [0x53, '<0']
 
     MOV_REGSI_REGAB     = [0x54]
     MOV_REGSI_REGCD     = [0x55]

@@ -241,7 +241,8 @@ class AssemblerTransformer(lark.Transformer):
                 sv = v.evaluate(symbol_table=self._symbol_table)
                 if not isinstance(sv, int):
                     raise RuntimeError(f"could not evaluate: {v!r}")
-                self._assembly[k] = sv & 0xFF
+                assert sv >= 0 and sv <= 0xFF
+                self._assembly[k] = sv
 
         output = [
             0,
@@ -302,21 +303,34 @@ class AssemblerTransformer(lark.Transformer):
                 encoding_components.append(f"IREG{child.register}")
             elif isinstance(child, Expression):
                 encoding_components.append("IMM")
-                immediates.append(child.evaluate() & 0xff)
+                immediates.append(child)
             else:
                 assert False, f"should not be reached with child: {child!r}"
 
         encoding = getattr(Encoding, "_".join(encoding_components), None)
         if encoding is None:
-            print(f"No encoding for: {encoding_components!r}. Using NOP.")
-            encoding = Encoding.NOP
+            raise RuntimeError(f"No encoding for: {encoding_components!r}.")
 
         encoding_bytes = []
         for e in encoding.value:
             if isinstance(e, int):
                 encoding_bytes.append(e)
-            elif isinstance(e, str) and e.startswith("#"):
-                encoding_bytes.append(immediates[int(e[1:])])
+            elif isinstance(e, str) and e.startswith("<"):
+                # Low byte of immadiate value
+                v = immediates[int(e[1:])]
+                encoding_bytes.append(
+                    BinaryOp(left=v, right=ConstantInt(value=0xFF), op="&")
+                )
+            elif isinstance(e, str) and e.startswith(">"):
+                # High byte of immadiate value
+                v = immediates[int(e[1:])]
+                encoding_bytes.append(
+                    BinaryOp(
+                        left=BinaryOp(left=v, right=ConstantInt(value=8), op=">>"),
+                        right=ConstantInt(value=0xFF),
+                        op="&",
+                    )
+                )
             else:
                 assert False, f"unknown encoding: {e!r}"
 
