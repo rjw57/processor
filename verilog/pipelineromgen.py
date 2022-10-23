@@ -30,7 +30,7 @@ class Line(enum.IntFlag):
     Bit12 = 1 << 12
     Bit13 = 1 << 13
     Bit14 = 1 << 14
-    Bit15 = 1 << 15
+    Halt = 1 << 15
 
     # Stage 2
     LoadBit0 = 1 << 16
@@ -48,7 +48,7 @@ class Line(enum.IntFlag):
     Bit28 = 1 << 28
     Bit29 = 1 << 29
     Bit30 = 1 << 30
-    Halt = 1 << 31
+    Bit31 = 1 << 31
 
     # Convenience for LHS assert
     AssertLHSRegA = 0 << 1

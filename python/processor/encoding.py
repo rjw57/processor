@@ -5,10 +5,6 @@ class Encoding(enum.Enum):
     NOP                 = [0x00]
     HALT                = [0x01]
 
-    # Jumps need a NOP synthesised after to ensure that the next instruction is
-    # not partially executed.
-    JMP_REGAB           = [0x20, NOP[0]]
-
     MOV_REGA_REGB       = [0x40]
     MOV_REGA_REGC       = [0x41]
     MOV_REGA_REGD       = [0x42]
@@ -74,7 +70,7 @@ class Encoding(enum.Enum):
 
     # FIXME: jump instructions need extra nop to avoid half executing following
     # instruction.
-    JMP_REGTX           = [0xc0, 0x00]
+    JMP_REGTX           = [0xc0, NOP[0]]
 
     # Pseudo-instructions
     MOV_REGTX_IMM       = [MOV_REGTL_IMM[0], '<0', MOV_REGTH_IMM[0], '>0']

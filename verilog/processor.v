@@ -45,6 +45,7 @@ wire ctrl_load_reg_const;
 wire [1:0] ctrl_lhs_bus_assert_index;
 wire [1:0] ctrl_rhs_bus_assert_index;
 wire [3:0] ctrl_alu_opcode;
+wire ctrl_halt;
 
 // Control lines - stage 2
 wire [2:0] ctrl_load_index;
@@ -53,7 +54,6 @@ wire [2:0] ctrl_main_bus_assert_index;
 wire [3:0] ctrl_addr_bus_assert_index;
 wire ctrl_alu_carry_in;
 wire ctrl_addr_bus_request;
-wire ctrl_halt;
 
 // Pipeline stages
 wire [6:0] pipeline_flags;
@@ -99,6 +99,7 @@ assign ctrl_load_reg_const = pipeline_1_control_out[0];
 assign ctrl_lhs_bus_assert_index = pipeline_1_control_out[2:1];
 assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[4:3];
 assign ctrl_alu_opcode = pipeline_1_control_out[8:5];
+assign ctrl_halt = pipeline_1_control_out[15];
 
 // Pipeline stage 2 control lines
 assign ctrl_load_index = pipeline_2_control_out[2:0];
@@ -107,7 +108,6 @@ assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
 assign ctrl_addr_bus_assert_index = pipeline_2_control_out[9:7];
 assign ctrl_alu_carry_in = pipeline_2_control_out[10];
 assign ctrl_addr_bus_request = pipeline_2_control_out[11];
-assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
 //
@@ -281,9 +281,7 @@ ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu_driver (
 // ALU flags register: latched at the -ve going clock edge. We latch at the -ve
 // clock edge to ensure the signal is stable for use in the next clock cycle.
 wire [7:0] reg_flags_in = {
-  1'b0,
-  ctrl_halt,
-  4'b0,
+  6'b0,
   alu_result[7],    // negative == sign bit of result
   alu_carry_out     // carry
 };
@@ -301,12 +299,13 @@ ttl_74575 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
   .Q(reg_flags_out)
 );
 
-// Halt line taken from flags register
-assign HALT = reg_flags_out[6];
+// Halt line taken from control line.
+assign HALT = ctrl_halt;
 
 // Note: this feedback into the pipelines stage is why it is important that we
-// have consistent reset behaviour
-assign pipeline_flags = reg_flags_out[6:0];
+// have consistent reset behaviour. We might need to make sure the pipeline
+// stages take a reset line.
+assign pipeline_flags = {RST_bar ? ctrl_halt : 1'b0, reg_flags_out[5:0]};
 
 assign alu_carry_in = ctrl_alu_carry_in;
 assign alu_opcode = ctrl_alu_opcode;
