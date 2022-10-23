@@ -24,6 +24,7 @@ class Encoding(enum.Enum):
     MOV_REGD_IMM        = [0x53, '#0']
 
     MOV_REGSI_REGAB     = [0x54]
+    MOV_REGSI_REGCD     = [0x55]
 
     MOV_REGA_IREGSI     = [0x6a]
 

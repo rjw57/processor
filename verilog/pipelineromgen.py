@@ -10,6 +10,7 @@ ADDR_WIDTH = 15
 class Flags(enum.IntFlag):
     Carry = 1 << 0
     Negative = 1 << 1
+    Halt = 1 << 6
 
 
 class Line(enum.IntFlag):
@@ -23,7 +24,7 @@ class Line(enum.IntFlag):
     ALUOpcodeBit1 = 1 << 6
     ALUOpcodeBit2 = 1 << 7
     ALUOpcodeBit3 = 1 << 8
-    AddrBusRequest = 1 << 9
+    Bit9 = 1 << 9
     Bit10 = 1 << 10
     Bit11 = 1 << 11
     Bit12 = 1 << 12
@@ -45,7 +46,7 @@ class Line(enum.IntFlag):
     AssertAddrBit0 = 1 << 26
     AssertAddrBit1 = 1 << 27
     AssertAddrBit2 = 1 << 28
-    Bit29 = 1 << 29
+    AddrBusRequest = 1 << 29
     Bit30 = 1 << 30
     Halt = 1 << 31
 
@@ -112,19 +113,24 @@ def control_lines(flags, opcode):
     # is the carry flag set
     is_carry = (flags & Flags.Carry) != 0
 
+    # is the procesor halted?
+    is_halt = (flags & Flags.Halt) != 0
+
     # how would we set the ALU's carry in to match the current carry flag?
     if is_carry:
         set_input_carry = Line.ALUCarryIn
     else:
         set_input_carry = 0
 
-    if opcode == Opcode.NOP:
+    # HALT needs to be handled first becaue is_halt overrides any other opcode
+    if opcode == Opcode.HALT or is_halt:
+        # By asserting AddrBusRequest we effectively stop the PC increment for
+        # cone cycle by which time the Halt line will have been raised in the
+        # flags register and we'll loop through infinite halts.
+        out |= Line.Halt | Line.AddrBusRequest
+    elif opcode == Opcode.NOP:
         # nothing
         pass
-    elif opcode == Opcode.HALT:
-        # FIXME: halt still increments PC. We need some sort
-        # of pipeline stall support
-        out |= Line.Halt
     elif opcode == Opcode.MOV_REGA_IMM:
         out |= (
             Line.LoadRegConst
@@ -354,11 +360,15 @@ def control_lines(flags, opcode):
             Line.LoadRegD | Line.AssertMainALUResult
         )
     elif opcode == Opcode.MOV_REGSI_REGAB:
-        # FIXME: we need to insert a nop into the pipeline because we miss the
-        # next instruction otherwise
         out &= ~assert_pc
         out |= (
             Line.AssertLHSRegA | Line.AssertRHSRegB | Line.LoadRegSI |
+            Line.AssertAddrRegLHSRHS | Line.AddrBusRequest
+        )
+    elif opcode == Opcode.MOV_REGSI_REGCD:
+        out &= ~assert_pc
+        out |= (
+            Line.AssertLHSRegC | Line.AssertRHSRegD | Line.LoadRegSI |
             Line.AssertAddrRegLHSRHS | Line.AddrBusRequest
         )
 

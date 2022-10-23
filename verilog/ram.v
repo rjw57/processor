@@ -22,6 +22,17 @@ reg [7:0] data[0:2**ADDR_WIDTH-1];
 
 assign #(DELAY_RISE, DELAY_FALL) Q = (~OE_bar & WE_bar * ~CS_bar) ? Q_out : 'bZ;
 
+integer i;
+initial
+begin
+  // Initialise RAM contents to junk data. This is just to avoid Xs propagating
+  // though the output which wouldn't happen in real hardware.
+  for(i=0; i<2**ADDR_WIDTH; i=i+1)
+  begin
+    data[i] = ~i;
+  end
+end
+
 always @(A)
 begin
   #READ_DELAY Q_out = data[A];

@@ -51,6 +51,7 @@ wire ctrl_alu_carry_in;
 wire [2:0] ctrl_main_bus_assert_index;
 wire [3:0] ctrl_addr_bus_load_index;
 wire [3:0] ctrl_addr_bus_assert_index;
+wire ctrl_addr_bus_request;
 wire ctrl_halt;
 
 // Pipeline stages
@@ -102,6 +103,7 @@ assign ctrl_alu_carry_in = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
 assign ctrl_addr_bus_load_index = pipeline_2_control_out[9:7];
 assign ctrl_addr_bus_assert_index = pipeline_2_control_out[12:10];
+assign ctrl_addr_bus_request = pipeline_2_control_out[13];
 assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
@@ -113,12 +115,39 @@ assign ctrl_halt = pipeline_2_control_out[15];
 // don't care about the initial state of the next instruction register; it will
 // get loaded with the first instruction during reset.
 wire inverted_rst_bar;
+wire [7:0] instr_dispatch_in = mem_data_bus;
 assign #(DELAY_RISE, DELAY_FALL) inverted_rst_bar = !RST_bar;
-assign #(DELAY_RISE, DELAY_FALL) next_instruction =
-  (ctrl_load_reg_const | inverted_rst_bar) ? 8'h00 : mem_data_bus;
 
-// Halt line
-assign HALT = ctrl_halt;
+// N.B we model pull-downs on this driver's outputs.
+wire [7:0] instr_dispatch_driver_out;
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) instr_dispatch_driver (
+  .A(instr_dispatch_in),
+  .Enable1_bar(ctrl_load_reg_const),
+  .Enable2_bar(inverted_rst_bar),
+  .Y(instr_dispatch_driver_out)
+);
+wire [7:0] instr_dispatch_current_instr = (
+  (instr_dispatch_driver_out === 8'hZZ) ? 8'h00 : instr_dispatch_driver_out
+);
+
+// The general idea here is that we latch the previous value on the memory data
+// bus. If stage 2 is using the address bus *and* stage 1 is in the middle of
+// a constant load, both stages will be wanting the contents of memory. In this
+// case let the stage 2 value through and re-dispatch the stage 1 instruction.
+// The PC will have been halted by stage 2 so we'll get the constant on the next
+// clock cycle.
+
+wire [7:0] instr_dispatch_prev_instr;
+ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) instr_dispatch_latch (
+  .OE_bar(1'b0),
+  .D(instr_dispatch_current_instr),
+  .Clk(CLK),
+  .Q(instr_dispatch_prev_instr)
+);
+
+// In reality this woulr be implemented with some and gates and a mutiplexer.
+assign #(2*DELAY_RISE, 2*DELAY_FALL) next_instruction = (
+  (ctrl_load_reg_const & ctrl_addr_bus_request) ? instr_dispatch_prev_instr : instr_dispatch_current_instr);
 
 // Memory
 wire [7:0] memory_data_out;
@@ -277,7 +306,9 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
 // ALU flags register: latched at the -ve going clock edge. We latch at the -ve
 // clock edge to ensure the signal is stable for use in the next clock cycle.
 wire [7:0] reg_flags_in = {
-  6'b0,
+  1'b0,
+  ctrl_halt,
+  4'b0,
   alu_result[7],    // negative == sign bit of result
   alu_carry_out     // carry
 };
@@ -294,6 +325,9 @@ ttl_74575 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_flags(
   .D(reg_flags_in),
   .Q(reg_flags_out)
 );
+
+// Halt line taken from flags register
+assign HALT = reg_flags_out[6];
 
 // Note: this feedback into the pipelines stage is why it is important that we
 // have consistent reset behaviour
@@ -342,7 +376,7 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
 );
 
 // Assert device 1, load device 1
-assign reg_pc_inc = CLK;
+assign reg_pc_inc = CLK | ctrl_addr_bus_request; // FIXME: add OR gate delay
 assign reg_pc_dec = 1'b1;
 assign reg_pc_assert_bar = addr_bus_assert_enable_bar[1];
 assign reg_pc_load = addr_bus_load_enable_bar[1];
