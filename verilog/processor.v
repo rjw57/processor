@@ -19,6 +19,7 @@ module processor
   output [7:0] FLAGS,
   output [15:0] PC,
   output [15:0] SI,
+  output [15:0] TX,
   output [15:0] MEMADDR,
   output [7:0] MEMDATA,
 
@@ -59,6 +60,8 @@ wire [6:0] pipeline_flags;
 wire [7:0] next_instruction;
 wire [7:0] pipeline_1_out;
 wire [15:0] pipeline_1_control_out;
+wire pipeline_cancel = 1'b0;
+
 pipelinestage #(
   .DELAY_RISE(DELAY_RISE),
   .DELAY_FALL(DELAY_FALL),
@@ -67,7 +70,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-1b.mem")
 ) pipeline_1 (
   .CLK(CLK),
-  .CANCEL(1'b0),
+  .CANCEL(pipeline_cancel),
   .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(next_instruction),
   .NEXT_STAGE_OUT(pipeline_1_out),
@@ -84,7 +87,7 @@ pipelinestage #(
   .B_CONTENTS("./pipeline-2b.mem")
 ) pipeline_2 (
   .CLK(CLK),
-  .CANCEL(1'b0),
+  .CANCEL(pipeline_cancel),
   .FLAGS(pipeline_flags),
   .PREV_STAGE_IN(pipeline_1_out),
   .NEXT_STAGE_OUT(pipeline_2_out),
@@ -272,10 +275,6 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_load_index_de
 assign addr_bus_load_index = ctrl_addr_bus_load_index;
 
 // Address bus assert device index:
-//
-// 0 == LHSRHS virtual register
-// 1 == PC reg
-// 2 == SI reg
 wire [2:0] addr_bus_assert_index;
 wire [7:0] addr_bus_assert_enable_bar;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_assert_index_decode (
@@ -292,6 +291,8 @@ wire [3:0] alu_opcode;
 wire alu_carry_in;
 wire [7:0] alu_result;
 wire alu_carry_out;
+wire alu_assert_bar;
+wire [7:0] alu_main_out;
 
 alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .CLK(CLK),
@@ -301,6 +302,14 @@ alu #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu (
   .CARRY_IN(alu_carry_in),
   .RESULT(alu_result),
   .CARRY_OUT(alu_carry_out)
+);
+
+// ALU sits on main data bus behind a line driver
+ttl_74541 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) alu_driver (
+  .A(alu_result),
+  .Enable1_bar(1'b0),
+  .Enable2_bar(alu_assert_bar),
+  .Y(alu_main_out)
 );
 
 // ALU flags register: latched at the -ve going clock edge. We latch at the -ve
@@ -337,7 +346,7 @@ assign alu_carry_in = ctrl_alu_carry_in;
 assign alu_opcode = ctrl_alu_opcode;
 
 // "Virtual" LHS_RHS register. Latched on clock. Asserts LHS *from previous
-// clock tick* to the upper byte of the address bus and RHS *From previous clock
+// clock tick* to the upper byte of the address bus and RHS *from previous clock
 // tick* to the lower byte.
 wire reg_lhsrhs_assert_bar;
 wire [15:0] reg_lhsrhs_out;
@@ -354,9 +363,6 @@ ttl_74574 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_lhsrhs_latch_2
   .OE_bar(reg_lhsrhs_assert_bar),
   .Q(reg_lhsrhs_out[15:8])
 );
-
-// Assert device 0
-assign reg_lhsrhs_assert_bar = addr_bus_assert_enable_bar[0];
 
 // Program counter register
 wire reg_pc_inc, reg_pc_dec, reg_pc_assert_bar;
@@ -378,8 +384,6 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
 // Assert device 1, load device 1
 assign reg_pc_inc = CLK | ctrl_addr_bus_request; // FIXME: add OR gate delay
 assign reg_pc_dec = 1'b1;
-assign reg_pc_assert_bar = addr_bus_assert_enable_bar[1];
-assign reg_pc_load = addr_bus_load_enable_bar[1];
 
 // SI register
 wire reg_si_inc, reg_si_dec, reg_si_assert_bar;
@@ -400,8 +404,25 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_si (
 // Assert device 3, load device 3
 assign reg_si_inc = 1'b1;
 assign reg_si_dec = 1'b1;
-assign reg_si_assert_bar = addr_bus_assert_enable_bar[3];
-assign reg_si_load = addr_bus_load_enable_bar[3];
+
+// Transfer register sitting on both address and main buses
+wire reg_tl_load, reg_th_load, reg_tx_load;
+wire reg_tl_assert_bar, reg_th_assert_bar, reg_tx_assert_bar;
+wire [7:0] reg_tx_main_out;
+wire [15:0] reg_tx_addr_out;
+transferreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_tx (
+  .LOAD_LOW(reg_tl_load),
+  .LOAD_HIGH(reg_th_load),
+  .LOAD_ADDR(reg_tx_load),
+  .ASSERT_LOW_bar(reg_tl_assert_bar),
+  .ASSERT_HIGH_bar(reg_th_assert_bar),
+  .ASSERT_ADDR_bar(reg_tx_assert_bar),
+  .MAIN_in(main_bus),
+  .ADDR_in(mem_addr_bus),
+  .MAIN_out(reg_tx_main_out),
+  .ADDR_out(reg_tx_addr_out),
+  .display_value(TX)
+);
 
 // General purpose registers
 wire [7:0] reg_a_main_out;
@@ -427,12 +448,6 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_a (
   .display_value(A)
 );
 
-// Device 2 on main bus. Device 0 on LHS/RHS buses.
-assign reg_a_assert_main_bar = main_bus_assert_enable_bar[2];
-assign reg_a_assert_lhs_bar = lhs_bus_assert_enable_bar[0];
-assign reg_a_assert_rhs_bar = rhs_bus_assert_enable_bar[0];
-assign reg_a_load = main_bus_load_enable_bar[1];
-
 wire [7:0] reg_b_main_out;
 wire [7:0] reg_b_lhs_out;
 wire [7:0] reg_b_rhs_out;
@@ -455,12 +470,6 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_b (
 
   .display_value(B)
 );
-
-// Device 3 on main bus. Device 1 on LHS/RHS buses.
-assign reg_b_assert_main_bar = main_bus_assert_enable_bar[3];
-assign reg_b_assert_lhs_bar = lhs_bus_assert_enable_bar[1];
-assign reg_b_assert_rhs_bar = rhs_bus_assert_enable_bar[1];
-assign reg_b_load = main_bus_load_enable_bar[2];
 
 wire [7:0] reg_c_main_out;
 wire [7:0] reg_c_lhs_out;
@@ -485,12 +494,6 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_c (
   .display_value(C)
 );
 
-// Device 4 on main bus. Device 2 on LHS/RHS buses.
-assign reg_c_assert_main_bar = main_bus_assert_enable_bar[4];
-assign reg_c_assert_lhs_bar = lhs_bus_assert_enable_bar[2];
-assign reg_c_assert_rhs_bar = rhs_bus_assert_enable_bar[2];
-assign reg_c_load = main_bus_load_enable_bar[3];
-
 wire [7:0] reg_d_main_out;
 wire [7:0] reg_d_lhs_out;
 wire [7:0] reg_d_rhs_out;
@@ -514,12 +517,6 @@ gpreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_d (
   .display_value(D)
 );
 
-// Device 5 on main bus. Device 3 on LHS/RHS buses.
-assign reg_d_assert_main_bar = main_bus_assert_enable_bar[5];
-assign reg_d_assert_lhs_bar = lhs_bus_assert_enable_bar[3];
-assign reg_d_assert_rhs_bar = rhs_bus_assert_enable_bar[3];
-assign reg_d_load = main_bus_load_enable_bar[4];
-
 // Constant register. Transparent latch of memory data bus used for two byte
 // instructions.
 // Like a general purpose register except the LHS/RHS buses
@@ -537,40 +534,63 @@ ttl_74573 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_const (
   .D(mem_data_bus),
   .Q(reg_const_main_out)
 );
-
-// Device 1 on the main bus. Not on LHS/RHS buses.
-assign reg_const_assert_main_bar = main_bus_assert_enable_bar[1];
 assign reg_const_load = ctrl_load_reg_const;
 
-// Tansfer of reg to 16 bit values. Could we have ab and cd be the sources by
-// e.g., asserting a to lhs, b to rhs, having a "lhsrhs" virtual register which
-// can assert on address bus?
+// Main bus register load lines
+assign reg_a_load = main_bus_load_enable_bar[1];
+assign reg_b_load = main_bus_load_enable_bar[2];
+assign reg_c_load = main_bus_load_enable_bar[3];
+assign reg_d_load = main_bus_load_enable_bar[4];
+assign reg_tl_load = main_bus_load_enable_bar[5];
+assign reg_th_load = main_bus_load_enable_bar[6];
 
-// Memory address bus
-wire [15:0] mem_addr_bus_stages [0:2];
+// Main bus assert
+assign reg_const_assert_main_bar = main_bus_assert_enable_bar[0];
+assign reg_a_assert_main_bar = main_bus_assert_enable_bar[1];
+assign reg_b_assert_main_bar = main_bus_assert_enable_bar[2];
+assign reg_c_assert_main_bar = main_bus_assert_enable_bar[3];
+assign reg_d_assert_main_bar = main_bus_assert_enable_bar[4];
+assign reg_tl_assert_bar = main_bus_assert_enable_bar[5];
+assign reg_th_assert_bar = main_bus_assert_enable_bar[6];
+assign alu_assert_bar = main_bus_assert_enable_bar[7];
+
+wire [7:0] main_bus_stages [0:8];
+assign main_bus_stages[0] = 8'bZ;
+assign main_bus_stages[1] = reg_const_assert_main_bar ? main_bus_stages[0] : reg_const_main_out;
+assign main_bus_stages[2] = reg_a_assert_main_bar ? main_bus_stages[1] : reg_a_main_out;
+assign main_bus_stages[3] = reg_b_assert_main_bar ? main_bus_stages[2] : reg_b_main_out;
+assign main_bus_stages[4] = reg_c_assert_main_bar ? main_bus_stages[3] : reg_c_main_out;
+assign main_bus_stages[5] = reg_d_assert_main_bar ? main_bus_stages[4] : reg_d_main_out;
+assign main_bus_stages[6] = alu_assert_bar ? main_bus_stages[5] : alu_main_out;
+assign main_bus_stages[7] = reg_tl_assert_bar ? main_bus_stages[6] : reg_tx_main_out;
+assign main_bus_stages[8] = reg_th_assert_bar ? main_bus_stages[7] : reg_tx_main_out;
+assign main_bus = main_bus_stages[8];
+
+// Address register loads
+assign reg_pc_load = addr_bus_load_enable_bar[1];
+assign reg_si_load = addr_bus_load_enable_bar[3];
+assign reg_tx_load = addr_bus_load_enable_bar[5];
+
+// Address bus asserts
+assign reg_pc_assert_bar = addr_bus_assert_enable_bar[0];
+assign reg_si_assert_bar = addr_bus_assert_enable_bar[2];
+assign reg_tx_assert_bar = addr_bus_assert_enable_bar[4];
+assign reg_lhsrhs_assert_bar = addr_bus_assert_enable_bar[5];
+
+wire [15:0] mem_addr_bus_stages [0:4];
 assign mem_addr_bus_stages[0] = 16'bZ;
 assign mem_addr_bus_stages[1] = reg_pc_assert_bar ? mem_addr_bus_stages[0] : reg_pc_out;
-assign mem_addr_bus_stages[2] = reg_lhsrhs_assert_bar ? mem_addr_bus_stages[1] : reg_lhsrhs_out;
-assign mem_addr_bus = mem_addr_bus_stages[2];
+assign mem_addr_bus_stages[2] = reg_si_assert_bar ? mem_addr_bus_stages[1] : reg_si_out;
+assign mem_addr_bus_stages[3] = reg_tx_assert_bar ? mem_addr_bus_stages[2] : reg_tx_addr_out;
+assign mem_addr_bus_stages[4] = reg_lhsrhs_assert_bar ? mem_addr_bus_stages[3] : reg_lhsrhs_out;
+assign mem_addr_bus = mem_addr_bus_stages[4];
 
-// Memory data bus
-wire [7:0] mem_data_bus_stages [0:1];
-assign mem_data_bus_stages[0] = 8'bZ;
-assign mem_data_bus_stages[1] = memory_assert_bar ? mem_data_bus_stages[0] : memory_data_out;
-assign mem_data_bus = mem_data_bus_stages[1];
+// LHS bus assert
+assign reg_a_assert_lhs_bar = lhs_bus_assert_enable_bar[0];
+assign reg_b_assert_lhs_bar = lhs_bus_assert_enable_bar[1];
+assign reg_c_assert_lhs_bar = lhs_bus_assert_enable_bar[2];
+assign reg_d_assert_lhs_bar = lhs_bus_assert_enable_bar[3];
 
-// Main bus
-wire [7:0] main_bus_stages [0:6];
-assign main_bus_stages[0] = 8'bZ;
-assign main_bus_stages[1] = main_bus_assert_enable_bar[1] ? main_bus_stages[0] : reg_const_main_out;
-assign main_bus_stages[2] = main_bus_assert_enable_bar[2] ? main_bus_stages[1] : reg_a_main_out;
-assign main_bus_stages[3] = main_bus_assert_enable_bar[3] ? main_bus_stages[2] : reg_b_main_out;
-assign main_bus_stages[4] = main_bus_assert_enable_bar[4] ? main_bus_stages[3] : reg_c_main_out;
-assign main_bus_stages[5] = main_bus_assert_enable_bar[5] ? main_bus_stages[4] : reg_d_main_out;
-assign main_bus_stages[6] = main_bus_assert_enable_bar[6] ? main_bus_stages[5] : alu_result;
-assign main_bus = main_bus_stages[6];
-
-// LHS bus
 wire [7:0] lhs_bus_stages [0:4];
 assign lhs_bus_stages[0] = 8'bZ;
 assign lhs_bus_stages[1] = reg_a_assert_lhs_bar ? lhs_bus_stages[0] : reg_a_lhs_out;
@@ -579,7 +599,12 @@ assign lhs_bus_stages[3] = reg_c_assert_lhs_bar ? lhs_bus_stages[2] : reg_c_lhs_
 assign lhs_bus_stages[4] = reg_d_assert_lhs_bar ? lhs_bus_stages[3] : reg_d_lhs_out;
 assign lhs_bus = lhs_bus_stages[4];
 
-// RHS bus
+// RHS bus assert
+assign reg_a_assert_rhs_bar = rhs_bus_assert_enable_bar[0];
+assign reg_b_assert_rhs_bar = rhs_bus_assert_enable_bar[1];
+assign reg_c_assert_rhs_bar = rhs_bus_assert_enable_bar[2];
+assign reg_d_assert_rhs_bar = rhs_bus_assert_enable_bar[3];
+
 wire [7:0] rhs_bus_stages [0:4];
 assign rhs_bus_stages[0] = 8'bZ;
 assign rhs_bus_stages[1] = reg_a_assert_rhs_bar ? rhs_bus_stages[0] : reg_a_rhs_out;
@@ -587,5 +612,11 @@ assign rhs_bus_stages[2] = reg_b_assert_rhs_bar ? rhs_bus_stages[1] : reg_b_rhs_
 assign rhs_bus_stages[3] = reg_c_assert_rhs_bar ? rhs_bus_stages[2] : reg_c_rhs_out;
 assign rhs_bus_stages[4] = reg_d_assert_rhs_bar ? rhs_bus_stages[3] : reg_d_rhs_out;
 assign rhs_bus = rhs_bus_stages[4];
+
+// Memory data bus
+wire [7:0] mem_data_bus_stages [0:1];
+assign mem_data_bus_stages[0] = 8'bZ;
+assign mem_data_bus_stages[1] = memory_assert_bar ? mem_data_bus_stages[0] : memory_data_out;
+assign mem_data_bus = mem_data_bus_stages[1];
 
 endmodule

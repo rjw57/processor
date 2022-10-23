@@ -85,24 +85,29 @@ class Line(enum.IntFlag):
     LoadRegTH = 6 << 16
 
     # Convenience for main bus assert device selection
-    AssertMainRegConst = 1 << 20
-    AssertMainRegA = 2 << 20
-    AssertMainRegB = 3 << 20
-    AssertMainRegC = 4 << 20
-    AssertMainRegD = 5 << 20
-    AssertMainALUResult = 6 << 20
+    AssertMainRegConst = 0 << 20
+    AssertMainRegA = 1 << 20
+    AssertMainRegB = 2 << 20
+    AssertMainRegC = 3 << 20
+    AssertMainRegD = 4 << 20
+    AssertMainTL = 5 << 20
+    AssertMainTH = 6 << 20
+    AssertMainALUResult = 7 << 20
 
     # Convenience for address bus load device selection
     # No device == index 0
     LoadRegPC = 1 << 23
     LoadRegRA = 2 << 23  # TODO
     LoadRegSI = 3 << 23
+    LoadRegDI = 4 << 23  # TODO
+    LoadRegTX = 5 << 23
 
     # Concenience for address bus assert device selection
-    AssertAddrRegLHSRHS = 0 << 26
-    AssertAddrRegPC = 1 << 26
-    AssertAddrRegRS = 2 << 26  # TODO
-    AssertAddrRegSI = 3 << 26
+    AssertAddrRegPC = 0 << 26
+    AssertAddrRegRS = 1 << 26  # TODO
+    AssertAddrRegSI = 2 << 26
+    AssertAddrRegDI = 3 << 26  # TODO
+    AssertAddrRegTX = 4 << 26
 
 
 def control_lines(flags, opcode):
@@ -153,6 +158,18 @@ def control_lines(flags, opcode):
         out |= (
             Line.LoadRegConst
             | Line.LoadRegD
+            | Line.AssertMainRegConst
+        )
+    elif opcode == Opcode.MOV_REGTL_IMM:
+        out |= (
+            Line.LoadRegConst
+            | Line.LoadRegTL
+            | Line.AssertMainRegConst
+        )
+    elif opcode == Opcode.MOV_REGTH_IMM:
+        out |= (
+            Line.LoadRegConst
+            | Line.LoadRegTH
             | Line.AssertMainRegConst
         )
     elif opcode == Opcode.MOV_REGA_REGB:
@@ -359,18 +376,12 @@ def control_lines(flags, opcode):
             Line.AssertLHSRegD | Line.AssertRHSRegC | Line.ALUOpcodeAdd | set_input_carry |
             Line.LoadRegD | Line.AssertMainALUResult
         )
-    elif opcode == Opcode.MOV_REGSI_REGAB:
+    elif opcode == Opcode.MOV_REGSI_REGTX:
         out &= ~assert_pc
-        out |= (
-            Line.AssertLHSRegA | Line.AssertRHSRegB | Line.LoadRegSI |
-            Line.AssertAddrRegLHSRHS | Line.AddrBusRequest
-        )
-    elif opcode == Opcode.MOV_REGSI_REGCD:
+        out |= Line.LoadRegSI | Line.AssertAddrRegTX | Line.AddrBusRequest
+    elif opcode == Opcode.JMP_REGTX:
         out &= ~assert_pc
-        out |= (
-            Line.AssertLHSRegC | Line.AssertRHSRegD | Line.LoadRegSI |
-            Line.AssertAddrRegLHSRHS | Line.AddrBusRequest
-        )
+        out |= Line.LoadRegPC | Line.AssertAddrRegTX
 
     return out
 

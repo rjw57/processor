@@ -5,7 +5,9 @@ class Encoding(enum.Enum):
     NOP                 = [0x00]
     HALT                = [0x01]
 
-    JMP_IMM             = [0x10, '<0', '>0']
+    # Jumps need a NOP synthesised after to ensure that the next instruction is
+    # not partially executed.
+    JMP_REGAB           = [0x20, NOP[0]]
 
     MOV_REGA_REGB       = [0x40]
     MOV_REGA_REGC       = [0x41]
@@ -24,11 +26,12 @@ class Encoding(enum.Enum):
     MOV_REGB_IMM        = [0x51, '<0']
     MOV_REGC_IMM        = [0x52, '<0']
     MOV_REGD_IMM        = [0x53, '<0']
+    MOV_REGTL_IMM       = [0x54, '<0']
+    MOV_REGTH_IMM       = [0x55, '<0']
 
-    MOV_REGSI_REGAB     = [0x54]
-    MOV_REGSI_REGCD     = [0x55]
+    MOV_REGSI_REGTX     = [0x60]
 
-    MOV_REGA_IREGSI     = [0x6a]
+    # MOV_REGA_IREGSI     = [0x6a]
 
     ADD_REGA_REGB       = [0x70]
     ADD_REGA_REGC       = [0x71]
@@ -56,18 +59,25 @@ class Encoding(enum.Enum):
     SUB_REGD_REGB       = [0x8a]
     SUB_REGD_REGC       = [0x8b]
 
-    ADDC_REGA_REGB       = [0x90]
-    ADDC_REGA_REGC       = [0x91]
-    ADDC_REGA_REGD       = [0x92]
-    ADDC_REGB_REGA       = [0x93]
-    ADDC_REGB_REGC       = [0x94]
-    ADDC_REGB_REGD       = [0x95]
-    ADDC_REGC_REGA       = [0x96]
-    ADDC_REGC_REGB       = [0x97]
-    ADDC_REGC_REGD       = [0x98]
-    ADDC_REGD_REGA       = [0x99]
-    ADDC_REGD_REGB       = [0x9a]
-    ADDC_REGD_REGC       = [0x9b]
+    ADDC_REGA_REGB      = [0x90]
+    ADDC_REGA_REGC      = [0x91]
+    ADDC_REGA_REGD      = [0x92]
+    ADDC_REGB_REGA      = [0x93]
+    ADDC_REGB_REGC      = [0x94]
+    ADDC_REGB_REGD      = [0x95]
+    ADDC_REGC_REGA      = [0x96]
+    ADDC_REGC_REGB      = [0x97]
+    ADDC_REGC_REGD      = [0x98]
+    ADDC_REGD_REGA      = [0x99]
+    ADDC_REGD_REGB      = [0x9a]
+    ADDC_REGD_REGC      = [0x9b]
+
+    # FIXME: jump instructions need extra nop to avoid half executing following
+    # instruction.
+    JMP_REGTX           = [0xc0, 0x00]
+
+    # Pseudo-instructions
+    MOV_REGTX_IMM       = [MOV_REGTL_IMM[0], '<0', MOV_REGTH_IMM[0], '>0']
 
 
 # Generate an IntEnum of opcode values from the first value in the instruction

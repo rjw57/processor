@@ -8,7 +8,7 @@ module transferreg #(
 )(
   input LOAD_LOW,
   input LOAD_HIGH,
-  input LOAD_SELECT, // 1 == main bus, 0 == address bus
+  input LOAD_ADDR,
 
   // 8-bit side access
   input ASSERT_LOW_bar,
@@ -34,14 +34,21 @@ wire load_high;
 wire [7:0] high_in;
 wire [7:0] high_out;
 
-// Requires 2 inverters
-assign #(DELAY_RISE, DELAY_FALL) load_low = !LOAD_LOW;
-assign #(DELAY_RISE, DELAY_FALL) load_high = !LOAD_HIGH;
+assign display_value = {high_out, low_out};
+
+// Requires 2 AND gates
+assign #(DELAY_RISE, DELAY_FALL) load_low = LOAD_LOW & LOAD_ADDR;
+assign #(DELAY_RISE, DELAY_FALL) load_high = LOAD_HIGH & LOAD_ADDR;
+
+// We need to delay the select line so that loading from the address register
+// still has the address values selecte. Simulate 2 inverter delay.
+wire load_select;
+assign #(2*DELAY_RISE, 2*DELAY_FALL) load_select = LOAD_ADDR;
 
 // Input select
 ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_1 (
   .Enable_bar(1'b0),
-  .Select(LOAD_SELECT),
+  .Select(load_select),
   .A_2D({
     {MAIN_in[3], ADDR_in[3]},
     {MAIN_in[2], ADDR_in[2]},
@@ -52,7 +59,7 @@ ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_1 (
 );
 ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_2 (
   .Enable_bar(1'b0),
-  .Select(LOAD_SELECT),
+  .Select(load_select),
   .A_2D({
     {MAIN_in[7], ADDR_in[7]},
     {MAIN_in[6], ADDR_in[6]},
@@ -63,7 +70,7 @@ ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_2 (
 );
 ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_3 (
   .Enable_bar(1'b0),
-  .Select(LOAD_SELECT),
+  .Select(load_select),
   .A_2D({
     {MAIN_in[3], ADDR_in[11]},
     {MAIN_in[2], ADDR_in[10]},
@@ -74,7 +81,7 @@ ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_3 (
 );
 ttl_74157 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) input_select_4 (
   .Enable_bar(1'b0),
-  .Select(LOAD_SELECT),
+  .Select(load_select),
   .A_2D({
     {MAIN_in[7], ADDR_in[15]},
     {MAIN_in[6], ADDR_in[14]},

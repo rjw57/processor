@@ -28,7 +28,7 @@ wire [7:0] rom_b_out;
 
 // in hardware we're implement this by a pull-down resistor network since the
 // latch will go high-Z
-assign NEXT_STAGE_OUT = CANCEL ? 8'h00 : opcode_next;
+assign NEXT_STAGE_OUT = (opcode_next === 8'hZZ) ? 8'h00 : opcode_next;
 
 // opcode latch
 ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) opcode_latch(
@@ -38,17 +38,17 @@ ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) opcode_latch(
   .Q          (opcode_next)
 );
 
-// control line latches
+// control line latches with pull downs on input
 ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) ctrl_1_latch(
   .Enable_bar (1'b0),
-  .D          (rom_a_out),
+  .D          ((rom_a_out === 8'hZZ) ? 8'h00 : rom_a_out),
   .Clk        (CLK),
   .Q          (CONTROL_OUT[7:0])
 );
 
 ttl_74377 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) ctrl_2_latch(
   .Enable_bar (1'b0),
-  .D          (rom_b_out),
+  .D          ((rom_b_out === 8'hZZ) ? 8'h00 : rom_b_out),
   .Clk        (CLK),
   .Q          (CONTROL_OUT[15:8])
 );
@@ -61,7 +61,7 @@ rom #(
   .ROM_CONTENTS(A_CONTENTS)
 ) rom_a (
   .WE_bar(1'b1),
-  .OE_bar(1'b0),
+  .OE_bar(CANCEL),
   .CS_bar(1'b0),
   .A({flags, opcode}),
   .Q(rom_a_out)
@@ -75,7 +75,7 @@ rom #(
   .ROM_CONTENTS(B_CONTENTS)
 ) rom_b (
   .WE_bar(1'b1),
-  .OE_bar(1'b0),
+  .OE_bar(CANCEL),
   .CS_bar(1'b0),
   .A({flags, opcode}),
   .Q(rom_b_out)

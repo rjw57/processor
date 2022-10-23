@@ -19,6 +19,7 @@ wire [7:0] D;
 wire [7:0] FLAGS;
 wire [15:0] PC;
 wire [15:0] SI;
+wire [15:0] TX;
 wire [15:0] MEMADDR;
 wire [7:0] MEMDATA;
 wire HALT;
@@ -33,7 +34,7 @@ processor #(
   .CLK(CLK),
   .RST_bar(RST_bar),
   .A(A), .B(B), .C(C), .D(D), .FLAGS(FLAGS),
-  .PC(PC), .SI(SI),
+  .PC(PC), .SI(SI), .TX(TX),
   .MEMADDR(MEMADDR), .MEMDATA(MEMDATA),
   .HALT(HALT)
 );
