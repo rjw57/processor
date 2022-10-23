@@ -33,20 +33,20 @@ class Line(enum.IntFlag):
     Bit15 = 1 << 15
 
     # Stage 2
-    LoadMainBit0 = 1 << 16
-    LoadMainBit1 = 1 << 17
-    LoadMainBit2 = 1 << 18
-    ALUCarryIn = 1 << 19
+    LoadBit0 = 1 << 16
+    LoadBit1 = 1 << 17
+    LoadBit2 = 1 << 18
+    LoadBit3 = 1 << 19  # == "select addr reg loads"
     AssertMainBit0 = 1 << 20
     AssertMainBit1 = 1 << 21
     AssertMainBit2 = 1 << 22
-    LoadAddrBit0 = 1 << 23
-    LoadAddrBit1 = 1 << 24
-    LoadAddrBit2 = 1 << 25
-    AssertAddrBit0 = 1 << 26
-    AssertAddrBit1 = 1 << 27
-    AssertAddrBit2 = 1 << 28
-    AddrBusRequest = 1 << 29
+    AssertAddrBit0 = 1 << 23
+    AssertAddrBit1 = 1 << 24
+    AssertAddrBit2 = 1 << 25
+    ALUCarryIn = 1 << 26
+    AddrBusRequest = 1 << 27
+    Bit28 = 1 << 28
+    Bit29 = 1 << 29
     Bit30 = 1 << 30
     Halt = 1 << 31
 
@@ -76,13 +76,19 @@ class Line(enum.IntFlag):
     ALUOpcodeRotateLeftLHS = 10 << 5
     ALUOpcodeRotateRightLHS = 11 << 5
 
-    # Convenience for main load
+    # Convenience for load
     LoadRegA = 1 << 16
     LoadRegB = 2 << 16
     LoadRegC = 3 << 16
     LoadRegD = 4 << 16
     LoadRegTL = 5 << 16
     LoadRegTH = 6 << 16
+
+    LoadRegPC = 8 << 16
+    LoadRegRA = 9 << 16  # TODO
+    LoadRegSI = 10 << 16
+    LoadRegDI = 11 << 16  # TODO
+    LoadRegTX = 12 << 16
 
     # Convenience for main bus assert device selection
     AssertMainRegConst = 0 << 20
@@ -94,20 +100,12 @@ class Line(enum.IntFlag):
     AssertMainTH = 6 << 20
     AssertMainALUResult = 7 << 20
 
-    # Convenience for address bus load device selection
-    # No device == index 0
-    LoadRegPC = 1 << 23
-    LoadRegRA = 2 << 23  # TODO
-    LoadRegSI = 3 << 23
-    LoadRegDI = 4 << 23  # TODO
-    LoadRegTX = 5 << 23
-
     # Concenience for address bus assert device selection
-    AssertAddrRegPC = 0 << 26
-    AssertAddrRegRS = 1 << 26  # TODO
-    AssertAddrRegSI = 2 << 26
-    AssertAddrRegDI = 3 << 26  # TODO
-    AssertAddrRegTX = 4 << 26
+    AssertAddrRegPC = 0 << 23
+    AssertAddrRegRS = 1 << 23  # TODO
+    AssertAddrRegSI = 2 << 23
+    AssertAddrRegDI = 3 << 23  # TODO
+    AssertAddrRegTX = 4 << 23
 
 
 def control_lines(flags, opcode):

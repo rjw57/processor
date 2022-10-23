@@ -47,11 +47,11 @@ wire [1:0] ctrl_rhs_bus_assert_index;
 wire [3:0] ctrl_alu_opcode;
 
 // Control lines - stage 2
-wire [2:0] ctrl_main_bus_load_index;
-wire ctrl_alu_carry_in;
+wire [2:0] ctrl_load_index;
+wire ctrl_load_from_addr;
 wire [2:0] ctrl_main_bus_assert_index;
-wire [3:0] ctrl_addr_bus_load_index;
 wire [3:0] ctrl_addr_bus_assert_index;
+wire ctrl_alu_carry_in;
 wire ctrl_addr_bus_request;
 wire ctrl_halt;
 
@@ -101,12 +101,12 @@ assign ctrl_rhs_bus_assert_index = pipeline_1_control_out[4:3];
 assign ctrl_alu_opcode = pipeline_1_control_out[8:5];
 
 // Pipeline stage 2 control lines
-assign ctrl_main_bus_load_index = pipeline_2_control_out[2:0];
-assign ctrl_alu_carry_in = pipeline_2_control_out[3];
+assign ctrl_load_index = pipeline_2_control_out[2:0];
+assign ctrl_load_from_addr = pipeline_2_control_out[3];
 assign ctrl_main_bus_assert_index = pipeline_2_control_out[6:4];
-assign ctrl_addr_bus_load_index = pipeline_2_control_out[9:7];
-assign ctrl_addr_bus_assert_index = pipeline_2_control_out[12:10];
-assign ctrl_addr_bus_request = pipeline_2_control_out[13];
+assign ctrl_addr_bus_assert_index = pipeline_2_control_out[9:7];
+assign ctrl_alu_carry_in = pipeline_2_control_out[10];
+assign ctrl_addr_bus_request = pipeline_2_control_out[11];
 assign ctrl_halt = pipeline_2_control_out[15];
 
 // Instruction dispatch.
@@ -183,27 +183,26 @@ memory #(
 wire load_index_decode_enable;
 assign #(DELAY_RISE, DELAY_FALL) load_index_decode_enable = ~CLK;
 
-wire [2:0] main_bus_load_index;
+wire [2:0] load_index;
 wire [7:0] main_bus_load_enable_bar;
+wire [7:0] addr_bus_load_enable_bar;
+assign load_index = ctrl_load_index;
+
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) main_load_index_decode (
   .Enable1_bar(load_index_decode_enable),
-  .Enable2_bar(1'b0),
+  .Enable2_bar(ctrl_load_from_addr),
   .Enable3(1'b1),
-  .A(main_bus_load_index),
+  .A(load_index),
   .Y(main_bus_load_enable_bar)
 );
-assign main_bus_load_index = ctrl_main_bus_load_index;
 
-wire [2:0] addr_bus_load_index;
-wire [7:0] addr_bus_load_enable_bar;
 ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_load_index_decode (
   .Enable1_bar(load_index_decode_enable),
   .Enable2_bar(1'b0),
-  .Enable3(1'b1),
-  .A(addr_bus_load_index),
+  .Enable3(ctrl_load_from_addr),
+  .A(load_index),
   .Y(addr_bus_load_enable_bar)
 );
-assign addr_bus_load_index = ctrl_addr_bus_load_index;
 
 // Main bus assert device index:
 wire [2:0] main_bus_assert_index;
@@ -253,7 +252,7 @@ ttl_74138 #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) addr_assert_index_
 );
 assign addr_bus_assert_index = ctrl_addr_bus_assert_index;
 
-// ALU - main bus device 5
+// ALU
 wire [3:0] alu_opcode;
 wire alu_carry_in;
 wire [7:0] alu_result;
@@ -347,8 +346,6 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_pc (
 
   .display_value(PC) // FIXME: change when we implement reg rewrite
 );
-
-// Assert device 1, load device 1
 assign reg_pc_inc = CLK | ctrl_addr_bus_request; // FIXME: add OR gate delay
 assign reg_pc_dec = 1'b1;
 
@@ -367,8 +364,6 @@ addrreg #(.DELAY_RISE(DELAY_RISE), .DELAY_FALL(DELAY_FALL)) reg_si (
 
   .display_value(SI)
 );
-
-// Assert device 3, load device 3
 assign reg_si_inc = 1'b1;
 assign reg_si_dec = 1'b1;
 
@@ -534,9 +529,9 @@ assign main_bus_stages[8] = reg_th_assert_bar ? main_bus_stages[7] : reg_tx_main
 assign main_bus = main_bus_stages[8];
 
 // Address register loads
-assign reg_pc_load = addr_bus_load_enable_bar[1];
-assign reg_si_load = addr_bus_load_enable_bar[3];
-assign reg_tx_load = addr_bus_load_enable_bar[5];
+assign reg_pc_load = addr_bus_load_enable_bar[0];
+assign reg_si_load = addr_bus_load_enable_bar[2];
+assign reg_tx_load = addr_bus_load_enable_bar[4];
 
 // Address bus asserts
 assign reg_pc_assert_bar = addr_bus_assert_enable_bar[0];
