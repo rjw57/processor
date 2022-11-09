@@ -326,8 +326,7 @@ class AssemblerTransformer(lark.Transformer):
                 v = immediates[int(e[1:])]
                 encoding_bytes.append(
                     BinaryOp(
-                        left=BinaryOp(
-                            left=v, right=ConstantInt(value=8), op=">>"),
+                        left=BinaryOp(left=v, right=ConstantInt(value=8), op=">>"),
                         right=ConstantInt(value=0xFF),
                         op="&",
                     )
